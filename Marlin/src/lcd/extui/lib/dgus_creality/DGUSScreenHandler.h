@@ -54,12 +54,6 @@ public:
   static void HandleTemperatureChanged(DGUS_VP_Variable &var, void *val_ptr);
   // Hook for "Change Flowrate"
   static void HandleFlowRateChanged(DGUS_VP_Variable &var, void *val_ptr);
-  #if ENABLED(DGUS_UI_MOVE_DIS_OPTION)
-    // Hook for manual move option
-    static void HandleManualMoveOption(DGUS_VP_Variable &var, void *val_ptr);
-  #endif
-  // Hook for manual move.
-  static void HandleManualMove(DGUS_VP_Variable &var, void *val_ptr);
   // Hook for manual extrude.
   static void HandleManualExtrude(DGUS_VP_Variable &var, void *val_ptr);
   // Hook for motor lock and unlook
