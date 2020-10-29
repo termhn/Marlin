@@ -75,6 +75,9 @@ public:
 
   static void HandleFeedAmountChanged(DGUS_VP_Variable &var, void *val_ptr);
 
+  // Hook for move to position
+  static void HandlePositionChange(DGUS_VP_Variable &var, void *val_ptr);
+
   #if HAS_PID_HEATING
     // Hook for "Change this temperature PID para"
     static void HandleTemperaturePIDChanged(DGUS_VP_Variable &var, void *val_ptr);

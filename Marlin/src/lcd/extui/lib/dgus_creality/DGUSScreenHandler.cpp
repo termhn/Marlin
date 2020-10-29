@@ -484,8 +484,6 @@ void DGUSScreenHandler::HandleZoffsetChange(DGUS_VP_Variable &var, void *val_ptr
   }
 }
 
-
-
 void DGUSScreenHandler::OnMeshLevelingStart() {
   GotoScreen(DGUSLCD_SCREEN_LEVELING);
 
@@ -911,7 +909,7 @@ void DGUSScreenHandler::HandleFeedAmountChanged(DGUS_VP_Variable &var, void *val
     float target = movevalue * 0.01f;
 
     DEBUG_ECHOLNPAIR("HandleFeedAmountChanged ", target);
-    
+
 
     *(float *)var.memadr = target;
 
@@ -929,6 +927,67 @@ void DGUSScreenHandler::HandleFeedAmountChanged(DGUS_VP_Variable &var, void *val
     return;
   }
 #endif
+
+void DGUSScreenHandler::HandlePositionChange(DGUS_VP_Variable &var, void *val_ptr) {
+  DEBUG_ECHOLNPGM("HandlePositionChange");
+
+  int16_t movevalue = swap16(*(uint16_t*)val_ptr);
+  char axiscode;
+  unsigned int speed = HOMING_FEEDRATE_XY;
+
+  switch (var.VP) {
+    default: return;
+
+    case VP_X_POSITION:
+      axiscode = 'X';
+      if (!ExtUI::canMove(ExtUI::axis_t::X)) goto cannotposchg;
+      break;
+
+    case VP_Y_POSITION:
+      axiscode = 'Y';
+      if (!ExtUI::canMove(ExtUI::axis_t::Y)) goto cannotposchg;
+      break;
+
+    case VP_Z_POSITION:
+      axiscode = 'Z';
+      speed = HOMING_FEEDRATE_Z;
+      if (!ExtUI::canMove(ExtUI::axis_t::Z)) goto cannotposchg;
+      break;
+  }
+
+  // This block is needed, otherwise the compile files due to all the variables being initialized below
+  {
+    //movement
+    DEBUG_ECHOPAIR(" poschg ", axiscode);
+    bool old_relative_mode = relative_mode;
+    if (relative_mode) {
+      queue.enqueue_now_P(PSTR("G90"));
+    }
+    char buf[32];  // G1 X9999.99 F12345
+    unsigned int backup_speed = MMS_TO_MMM(feedrate_mm_s);
+    char sign[]="\0";
+    int16_t value = movevalue / 10;
+    if (movevalue < 0) { value = -value; sign[0] = '-'; }
+    int16_t fraction = ABS(movevalue) % 10;
+    snprintf_P(buf, 32, PSTR("G0 %c%s%d.%02d F%d"), axiscode, sign, value, fraction, speed);
+    queue.enqueue_one_now(buf);
+    if (backup_speed != speed) {
+      snprintf_P(buf, 32, PSTR("G0 F%d"), backup_speed);
+      queue.enqueue_one_now(buf);
+    }
+    if (old_relative_mode) {
+      queue.enqueue_now_P(PSTR("G91"));
+    }
+  }
+
+  ScreenHandler.ForceCompleteUpdate();
+  DEBUG_ECHOLNPGM("poschg done.");
+  return;
+
+  cannotposchg:
+  DEBUG_ECHOLNPAIR(" cannot move ", axiscode);
+  return;
+}
 
 #if ENABLED(BABYSTEPPING)
   void DGUSScreenHandler::HandleLiveAdjustZ(DGUS_VP_Variable &var, void *val_ptr) {
@@ -1209,7 +1268,7 @@ bool DGUSScreenHandler::loop() {
   if (!IsScreenComplete() || ELAPSED(ms, next_event_ms)) {
     next_event_ms = ms + DGUS_UPDATE_INTERVAL_MS;
     UpdateScreenVPData();
-    
+
     // Read which screen is currently triggered - navigation at display side may occur
     if (dgusdisplay.isInitialized()) dgusdisplay.ReadCurrentScreen();
   }
@@ -1233,7 +1292,7 @@ bool DGUSScreenHandler::loop() {
       GotoScreen(DGUSLCD_SCREEN_MAIN);
     }
   }
-    
+
   return IsScreenComplete();
 }
 
