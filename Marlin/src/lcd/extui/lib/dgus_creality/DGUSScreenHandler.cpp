@@ -22,7 +22,7 @@
 
 #include "../../../../inc/MarlinConfigPre.h"
 
-#define DEBUG_ECHOLNPAIR SERIAL_ECHOLNPAIR
+#define DEBUG_ECHOLNPAIR DEBUG_ECHOLNPAIR
 
 #if ENABLED(DGUS_LCD_UI_CREALITY_TOUCH)
 
@@ -351,7 +351,7 @@ void DGUSScreenHandler::DGUSLCD_SendHeaterStatusToDisplay(DGUS_VP_Variable &var)
   void DGUSScreenHandler::DGUSLCD_SD_FileSelected(DGUS_VP_Variable &var, void *val_ptr) {
     uint16_t touched_nr = (int16_t)swap16(*(uint16_t*)val_ptr) + top_file;
 
-    SERIAL_ECHOLNPAIR("Selected file: ", touched_nr);
+    DEBUG_ECHOLNPAIR("Selected file: ", touched_nr);
 
     if (touched_nr > filelist.count()) return;
     if (!filelist.seek(touched_nr)) return;
@@ -450,7 +450,7 @@ void DGUSScreenHandler::Buzzer(const uint16_t frequency, const uint16_t duration
   // Frequency is fixed - duration is not but in 8 ms steps
   const uint8_t durationUnits = static_cast<uint8_t>(duration / 8);
 
-  SERIAL_ECHOLNPAIR("Invoking buzzer with units: ", durationUnits);
+  DEBUG_ECHOLNPAIR("Invoking buzzer with units: ", durationUnits);
   const unsigned char buzzerCommand[] = { 0x00, durationUnits, 0x40 /*Volume*/, 0x02 };
 
   // WAE_Music_Play_Set
@@ -498,7 +498,7 @@ void DGUSScreenHandler::OnMeshLevelingStart() {
 void DGUSScreenHandler::OnMeshLevelingUpdate(const int8_t xpos, const int8_t ypos) {
   MeshLevelIndex++;
 
-  SERIAL_ECHOLNPAIR("Mesh level index: ", MeshLevelIndex);
+  DEBUG_ECHOLNPAIR("Mesh level index: ", MeshLevelIndex);
 
   // Update icon
   dgusdisplay.WriteVariable(VP_MESH_LEVEL_STATUS, static_cast<uint16_t>(MeshLevelIndex + 1));
@@ -556,8 +556,8 @@ void DGUSScreenHandler::ScreenChangeHook(DGUS_VP_Variable &var, void *val_ptr) {
   // meaning "return to previous screen"
   DGUSLCD_Screens target = (DGUSLCD_Screens)tmp[1];
 
-  SERIAL_ECHOLNPAIR("Current screen:", current_screen);
-  SERIAL_ECHOLNPAIR("Cancel target:", target);
+  DEBUG_ECHOLNPAIR("Current screen:", current_screen);
+  DEBUG_ECHOLNPAIR("Cancel target:", target);
 
   if (confirm_action_cb && current_screen == DGUSLCD_SCREEN_POPUP) {
     DEBUG_ECHOLN("Executing confirmation action");
@@ -1120,7 +1120,7 @@ void DGUSScreenHandler::UpdateNewScreen(DGUSLCD_Screens newscreen, bool save_cur
 }
 
 void DGUSScreenHandler::PopToOldScreen() {
-  SERIAL_ECHOLNPAIR("PopToOldScreen s=", past_screens[0]);
+  DEBUG_ECHOLNPAIR("PopToOldScreen s=", past_screens[0]);
   GotoScreen(past_screens[0], false);
   memmove(&past_screens[0], &past_screens[1], sizeof(past_screens) - 1);
   past_screens[sizeof(past_screens) - 1] = DGUSLCD_SCREEN_MAIN;
@@ -1128,8 +1128,8 @@ void DGUSScreenHandler::PopToOldScreen() {
 
 void DGUSScreenHandler::updateCurrentScreen(DGUSLCD_Screens current) {
   if (current_screen != current) {
-    SERIAL_ECHOPAIR("Screen updated at display side: Was ", current_screen);
-    SERIAL_ECHOLNPAIR(", is now: ", current);
+    DEBUG_ECHOPAIR("Screen updated at display side: Was ", current_screen);
+    DEBUG_ECHOLNPAIR(", is now: ", current);
 
     UpdateNewScreen(current, current != DGUSLCD_SCREEN_POPUP && current != DGUSLCD_SCREEN_CONFIRM);
   }
@@ -1188,7 +1188,7 @@ void DGUSScreenHandler::UpdateScreenVPData() {
 }
 
 void DGUSScreenHandler::GotoScreen(DGUSLCD_Screens screen, bool save_current_screen) {
-  SERIAL_ECHOLNPAIR("Issuing command to go to screen: ", screen);
+  DEBUG_ECHOLNPAIR("Issuing command to go to screen: ", screen);
   dgusdisplay.RequestScreen(screen);
   UpdateNewScreen(screen, save_current_screen);
 }
