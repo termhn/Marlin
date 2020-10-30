@@ -225,7 +225,9 @@ const uint16_t VPList_PrintScreen[] PROGMEM = {
   #if HAS_HEATED_BED
     VP_T_Bed_Is, VP_T_Bed_Set,// VP_BED_STATUS,
   #endif
-  /*VP_XPos, VP_YPos,*/ VP_ZPos,
+
+  VP_X_POSITION, VP_Y_POSITION, VP_Z_POSITION,
+  VP_ZPos,
   //VP_Fan0_Percentage,
   VP_Feedrate_Percentage,
 
