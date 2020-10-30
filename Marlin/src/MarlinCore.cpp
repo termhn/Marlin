@@ -750,7 +750,7 @@ void idle(TERN_(ADVANCED_PAUSE_FEATURE, bool no_stepper_sleep/*=false*/)) {
   // Handle UI input / draw events
   TERN(DWIN_CREALITY_LCD, DWIN_Update(), ui.update());
 
-  #if ENABLED(FIX_MOUNTED_PROBE)
+  #if PIN_EXISTS(OPTO_SWITCH)
     static bool optoSwitch;
     if (optoSwitch != READ(OPTO_SWITCH_PIN)) {
       optoSwitch = READ(OPTO_SWITCH_PIN);
@@ -761,8 +761,6 @@ void idle(TERN_(ADVANCED_PAUSE_FEATURE, bool no_stepper_sleep/*=false*/)) {
       bool is_in_probing_zone = READ(OPTO_SWITCH_PIN) == 0;
       endstops.enable_z_probe(is_in_probing_zone);
     }
-
-    
   #endif
 
   // Run i2c Position Encoders
@@ -1104,9 +1102,13 @@ void setup() {
     SETUP_RUN(ui.reset_status());     // Load welcome message early. (Retained if no errors exist.)
   #endif
 
-  #ifdef FIX_MOUNTED_PROBE
-    SERIAL_ECHOLN("Initializing COM PIN");
+  #ifdef PIN_EXISTS(COM)
+    SERIAL_ECHOLN("Init COM_PIN");
     OUT_WRITE(COM_PIN, HIGH);
+  #endif
+
+  #if PIN_EXISTS(OPTO_SWITCH)
+    SETUP_LOG("Init OPTO_SWITCH_PIN");
     SET_INPUT(OPTO_SWITCH_PIN);
   #endif
 
