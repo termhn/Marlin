@@ -26,7 +26,7 @@ void MainMenuHandler(DGUS_VP_Variable &var, unsigned short buttonValue) {
 
 void ControlMenuHandler(DGUS_VP_Variable &var, unsigned short buttonValue) {
     switch (var.VP) {
-        case VP_BUTTON_PREPAREENTERKEY: 
+        case VP_BUTTON_PREPAREENTERKEY:
             switch(buttonValue) {
                 case 5: // About
                     // Automatically handled
@@ -115,7 +115,7 @@ void PrepareMenuHandler(DGUS_VP_Variable &var, unsigned short buttonValue) {
         case VP_BUTTON_COOLDOWN:
             ScreenHandler.HandleAllHeatersOff(var, &buttonValue);
             break;
-        
+
         case VP_BUTTON_TEMPCONTROL:
             switch (buttonValue) {
                 case 5:
@@ -150,7 +150,7 @@ void TuneMenuHandler(DGUS_VP_Variable &var, unsigned short buttonValue) {
                 case 4:
                     ScreenHandler.HandleLEDToggle();
                 break;
-            }         
+            }
     }
 }
 
@@ -172,7 +172,7 @@ void PrintPauseDialogHandler(DGUS_VP_Variable &var, unsigned short buttonValue) 
     switch (var.VP){
         case VP_BUTTON_PAUSEPRINTKEY:
             switch (buttonValue) {
-                case 2: 
+                case 2:
                     ExtUI::pausePrint();
                     ScreenHandler.GotoScreen(DGUSLCD_SCREEN_PRINT_PAUSED);
                     break;
@@ -253,14 +253,14 @@ void FeedHandler(DGUS_VP_Variable &var, unsigned short buttonValue) {
                 thermalManager.still_heating(0),
                 PAUSE_MODE_LOAD_FILAMENT
             );
-            
+
             dgusdisplay.WriteVariable(VP_FEED_PROGRESS, static_cast<int16_t>(0));
         break;
 
         case 2:
             if (ExtUI::getActualTemp_celsius(ExtUI::H0) < PREHEAT_1_TEMP_HOTEND) {
                 ExtUI::setTargetTemp_celsius(PREHEAT_1_TEMP_HOTEND, ExtUI::H0);
-                
+
                 thermalManager.wait_for_hotend(0);
             }
 
@@ -279,23 +279,45 @@ void FeedHandler(DGUS_VP_Variable &var, unsigned short buttonValue) {
     ScreenHandler.ForceCompleteUpdate();
 }
 
+void MoveHandler(DGUS_VP_Variable &var, unsigned short buttonValue) {
+  if (var.VP != VP_BUTTON_MOVEKEY) return;
+
+  switch (buttonValue) {
+    case 1:
+      ScreenHandler.GotoScreen(DGUSLCD_SCREEN_MOVE10MM);
+      break;
+    case 2:
+      ScreenHandler.GotoScreen(DGUSLCD_SCREEN_MOVE1MM);
+      break;
+    case 3:
+      ScreenHandler.GotoScreen(DGUSLCD_SCREEN_MOVE01MM);
+      break;
+    case 4:
+      ExtUI::injectCommands_P("G28");
+      break;
+  }
+}
+
 // Register the page handlers
 #define PAGE_HANDLER(SCRID, HDLRPTR) { .ScreenID=SCRID, .Handler=HDLRPTR },
 const struct PageHandler PageHandlers[] PROGMEM = {
     PAGE_HANDLER(DGUSLCD_Screens::DGUSLCD_SCREEN_MAIN, MainMenuHandler)
-    
+
     PAGE_HANDLER(DGUSLCD_Screens::DGUSLCD_SCREEN_CONTROL, ControlMenuHandler)
 
     PAGE_HANDLER(DGUSLCD_Screens::DGUSLCD_SCREEN_ZOFFSET_LEVEL, LevelingModeHandler)
     PAGE_HANDLER(DGUSLCD_Screens::DGUSLCD_SCREEN_LEVELING, LevelingHandler)
-    
+
     PAGE_HANDLER(DGUSLCD_Screens::DGUSLCD_SCREEN_TEMP, TempMenuHandler)
     PAGE_HANDLER(DGUSLCD_Screens::DGUSLCD_SCREEN_TEMP_PLA, PreheatSettingsScreenHandler)
     PAGE_HANDLER(DGUSLCD_Screens::DGUSLCD_SCREEN_TEMP_ABS, PreheatSettingsScreenHandler)
-    
+
     PAGE_HANDLER(DGUSLCD_Screens::DGUSLCD_SCREEN_TUNING, TuneMenuHandler)
     PAGE_HANDLER(DGUSLCD_Screens::DGUSLCD_SCREEN_FEED, FeedHandler)
-    
+    PAGE_HANDLER(DGUSLCD_Screens::DGUSLCD_SCREEN_MOVE01MM, MoveHandler)
+    PAGE_HANDLER(DGUSLCD_Screens::DGUSLCD_SCREEN_MOVE1MM, MoveHandler)
+    PAGE_HANDLER(DGUSLCD_Screens::DGUSLCD_SCREEN_MOVE10MM, MoveHandler)
+
     PAGE_HANDLER(DGUSLCD_Screens::DGUSLCD_SCREEN_FILAMENTRUNOUT1, FilamentRunoutHandler)
 
     PAGE_HANDLER(DGUSLCD_Screens::DGUSLCD_SCREEN_DIALOG_STOP, StopConfirmScreenHandler)

@@ -484,8 +484,6 @@ void DGUSScreenHandler::HandleZoffsetChange(DGUS_VP_Variable &var, void *val_ptr
   }
 }
 
-
-
 void DGUSScreenHandler::OnMeshLevelingStart() {
   GotoScreen(DGUSLCD_SCREEN_LEVELING);
 
@@ -657,104 +655,6 @@ void DGUSScreenHandler::HandleManualExtrude(DGUS_VP_Variable &var, void *val_ptr
   skipVP = var.VP;
 }
 
-#if ENABLED(DGUS_UI_MOVE_DIS_OPTION)
-  void DGUSScreenHandler::HandleManualMoveOption(DGUS_VP_Variable &var, void *val_ptr) {
-    DEBUG_ECHOLNPGM("HandleManualMoveOption");
-    *(uint16_t*)var.memadr = swap16(*(uint16_t*)val_ptr);
-  }
-#endif
-
-void DGUSScreenHandler::HandleManualMove(DGUS_VP_Variable &var, void *val_ptr) {
-  DEBUG_ECHOLNPGM("HandleManualMove");
-
-  int16_t movevalue = swap16(*(uint16_t*)val_ptr);
-  #if ENABLED(DGUS_UI_MOVE_DIS_OPTION)
-    if (movevalue) {
-      const uint16_t choice = *(uint16_t*)var.memadr;
-      movevalue = movevalue < 0 ? -choice : choice;
-    }
-  #endif
-  char axiscode;
-  unsigned int speed = 1500;  //FIXME: get default feedrate for manual moves, dont hardcode.
-
-  switch (var.VP) {
-    default: return;
-
-    case VP_MOVE_X:
-      axiscode = 'X';
-      if (!ExtUI::canMove(ExtUI::axis_t::X)) goto cannotmove;
-      break;
-
-    case VP_MOVE_Y:
-      axiscode = 'Y';
-      if (!ExtUI::canMove(ExtUI::axis_t::Y)) goto cannotmove;
-      break;
-
-    case VP_MOVE_Z:
-      axiscode = 'Z';
-      speed = 300; // default to 5mm/s
-      if (!ExtUI::canMove(ExtUI::axis_t::Z)) goto cannotmove;
-      break;
-
-    case VP_HOME_ALL: // only used for homing
-      axiscode = '\0';
-      movevalue = 0; // ignore value sent from display, this VP is _ONLY_ for homing.
-      break;
-  }
-
-  if (!movevalue) {
-    // homing
-    DEBUG_ECHOPAIR(" homing ", axiscode);
-    char buf[6] = "G28 X";
-    buf[4] = axiscode;
-    //DEBUG_ECHOPAIR(" ", buf);
-    queue.enqueue_one_now(buf);
-    //DEBUG_ECHOLNPGM(" ✓");
-    ScreenHandler.ForceCompleteUpdate();
-    return;
-  }
-  else {
-    //movement
-    DEBUG_ECHOPAIR(" move ", axiscode);
-    bool old_relative_mode = relative_mode;
-    if (!relative_mode) {
-      //DEBUG_ECHOPGM(" G91");
-      queue.enqueue_now_P(PSTR("G91"));
-      //DEBUG_ECHOPGM(" ✓ ");
-    }
-    char buf[32];  // G1 X9999.99 F12345
-    unsigned int backup_speed = MMS_TO_MMM(feedrate_mm_s);
-    char sign[]="\0";
-    int16_t value = movevalue / 100;
-    if (movevalue < 0) { value = -value; sign[0] = '-'; }
-    int16_t fraction = ABS(movevalue) % 100;
-    snprintf_P(buf, 32, PSTR("G0 %c%s%d.%02d F%d"), axiscode, sign, value, fraction, speed);
-    //DEBUG_ECHOPAIR(" ", buf);
-    queue.enqueue_one_now(buf);
-    //DEBUG_ECHOLNPGM(" ✓ ");
-    if (backup_speed != speed) {
-      snprintf_P(buf, 32, PSTR("G0 F%d"), backup_speed);
-      queue.enqueue_one_now(buf);
-      //DEBUG_ECHOPAIR(" ", buf);
-    }
-    //while (!enqueue_and_echo_command(buf)) idle();
-    //DEBUG_ECHOLNPGM(" ✓ ");
-    if (!old_relative_mode) {
-      //DEBUG_ECHOPGM("G90");
-      queue.enqueue_now_P(PSTR("G90"));
-      //DEBUG_ECHOPGM(" ✓ ");
-    }
-  }
-
-  ScreenHandler.ForceCompleteUpdate();
-  DEBUG_ECHOLNPGM("manmv done.");
-  return;
-
-  cannotmove:
-  DEBUG_ECHOLNPAIR(" cannot move ", axiscode);
-  return;
-}
-
 void DGUSScreenHandler::HandleMotorLockUnlock(DGUS_VP_Variable &var, void *val_ptr) {
   DEBUG_ECHOLNPGM("HandleMotorLockUnlock");
 
@@ -911,7 +811,7 @@ void DGUSScreenHandler::HandleFeedAmountChanged(DGUS_VP_Variable &var, void *val
     float target = movevalue * 0.01f;
 
     DEBUG_ECHOLNPAIR("HandleFeedAmountChanged ", target);
-    
+
 
     *(float *)var.memadr = target;
 
@@ -929,6 +829,38 @@ void DGUSScreenHandler::HandleFeedAmountChanged(DGUS_VP_Variable &var, void *val
     return;
   }
 #endif
+
+void DGUSScreenHandler::HandlePositionChange(DGUS_VP_Variable &var, void *val_ptr) {
+  DEBUG_ECHOLNPGM("HandlePositionChange");
+
+  unsigned int speed = HOMING_FEEDRATE_XY;
+  float target_position = ((float)swap16(*(uint16_t*)val_ptr)) / 10.0;
+
+  switch (var.VP) {
+    default: return;
+
+    case VP_X_POSITION:
+      if (!ExtUI::canMove(ExtUI::axis_t::X)) return;
+      current_position.x = target_position;
+      break;
+
+    case VP_Y_POSITION:
+      if (!ExtUI::canMove(ExtUI::axis_t::Y)) return;
+      current_position.y = target_position;
+      break;
+
+    case VP_Z_POSITION:
+      if (!ExtUI::canMove(ExtUI::axis_t::Z)) return;
+      speed = HOMING_FEEDRATE_Z;
+      current_position.z = target_position;
+      break;
+  }
+
+  line_to_current_position(MMM_TO_MMS(speed));
+
+  ScreenHandler.ForceCompleteUpdate();
+  DEBUG_ECHOLNPGM("poschg done.");
+}
 
 #if ENABLED(BABYSTEPPING)
   void DGUSScreenHandler::HandleLiveAdjustZ(DGUS_VP_Variable &var, void *val_ptr) {
@@ -1209,7 +1141,7 @@ bool DGUSScreenHandler::loop() {
   if (!IsScreenComplete() || ELAPSED(ms, next_event_ms)) {
     next_event_ms = ms + DGUS_UPDATE_INTERVAL_MS;
     UpdateScreenVPData();
-    
+
     // Read which screen is currently triggered - navigation at display side may occur
     if (dgusdisplay.isInitialized()) dgusdisplay.ReadCurrentScreen();
   }
@@ -1233,7 +1165,7 @@ bool DGUSScreenHandler::loop() {
       GotoScreen(DGUSLCD_SCREEN_MAIN);
     }
   }
-    
+
   return IsScreenComplete();
 }
 
