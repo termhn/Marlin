@@ -250,7 +250,6 @@ const uint16_t VPList_Leveling[] PROGMEM = {
   VP_Feedrate_Percentage,
 
   VP_MESH_LEVEL_TEMP,
-  VP_MESH_LEVEL_STATUS,
 
   0x0000
 };
