@@ -70,7 +70,9 @@ namespace ExtUI {
     ScreenHandler.Buzzer(frequency, duration);
   }
 
-  void onPrintTimerStarted() {}
+  void onPrintTimerStarted() {
+    ScreenHandler.GotoScreen(DGUSLCD_SCREEN_PRINT_RUNNING);
+  }
 
   void onPrintTimerPaused() {
     // Handle M28 Pause SD print - But only if we're not waiting on a user
@@ -79,7 +81,9 @@ namespace ExtUI {
     }
   }
 
-  void onPrintTimerStopped() {}
+  void onPrintTimerStopped() {
+    ScreenHandler.GotoScreen(DGUSLCD_SCREEN_PRINT_FINISH);
+  }
 
   void onFilamentRunout(const extruder_t extruder) {
     ScreenHandler.FilamentRunout();

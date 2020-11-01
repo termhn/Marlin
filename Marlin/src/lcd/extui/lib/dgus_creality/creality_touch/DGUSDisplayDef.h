@@ -194,7 +194,7 @@ constexpr uint16_t VP_PREHEAT_ABS_BED_TEMP = 0x110a;
 
 // // Place for status messages.
 constexpr uint16_t VP_M117 = 0x21B3;
-constexpr uint8_t VP_M117_LEN = 0x20;
+constexpr uint8_t VP_M117_LEN = 60;
 
 // // Temperatures.
 constexpr uint16_t VP_T_E0_Is = 0x1036;  // 4 Byte Integer - HEAD_CURRENT_TEMP_VP

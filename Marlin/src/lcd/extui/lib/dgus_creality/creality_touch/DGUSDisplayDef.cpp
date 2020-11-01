@@ -59,7 +59,6 @@ const uint16_t VPList_DialogStop[] PROGMEM = {
 };
 
 const uint16_t VPList_Main[] PROGMEM = {
-  /* VP_M117, for completeness, but it cannot be auto-uploaded. */
   #if HOTENDS >= 1
     VP_T_E0_Is, VP_T_E0_Set,// VP_E0_STATUS,
   #endif
@@ -76,7 +75,6 @@ const uint16_t VPList_Main[] PROGMEM = {
 };
 
 const uint16_t VPList_SDFileList[] PROGMEM = {
-  /* VP_M117, for completeness, but it cannot be auto-uploaded. */
   #if HOTENDS >= 1
     VP_T_E0_Is, VP_T_E0_Set,// VP_E0_STATUS,
   #endif
@@ -101,7 +99,6 @@ const uint16_t VPList_SDFileList[] PROGMEM = {
 };
 
 const uint16_t VPList_Control[] PROGMEM = {
-  /* VP_M117, for completeness, but it cannot be auto-uploaded. */
   #if HOTENDS >= 1
     VP_T_E0_Is, VP_T_E0_Set,// VP_E0_STATUS,
   #endif
@@ -121,7 +118,6 @@ const uint16_t VPList_Control[] PROGMEM = {
 };
 
 const uint16_t VPList_Feed[] PROGMEM = {
-  /* VP_M117, for completeness, but it cannot be auto-uploaded. */
   #if HOTENDS >= 1
     VP_T_E0_Is, VP_T_E0_Set,// VP_E0_STATUS,
   #endif
@@ -137,7 +133,6 @@ const uint16_t VPList_Feed[] PROGMEM = {
 };
 
 const uint16_t VPList_Temp[] PROGMEM = {
-  /* VP_M117, for completeness, but it cannot be auto-uploaded. */
   #if HOTENDS >= 1
     VP_T_E0_Is, VP_T_E0_Set,// VP_E0_STATUS,
   #endif
@@ -158,7 +153,6 @@ const uint16_t VPList_Temp[] PROGMEM = {
 
 
 const uint16_t VPList_PreheatPLASettings[] PROGMEM = {
-  /* VP_M117, for completeness, but it cannot be auto-uploaded. */
   #if HOTENDS >= 1
     VP_T_E0_Is, VP_T_E0_Set,// VP_E0_STATUS,
   #endif
@@ -176,7 +170,6 @@ const uint16_t VPList_PreheatPLASettings[] PROGMEM = {
 };
 
 const uint16_t VPList_PreheatABSSettings[] PROGMEM = {
-  /* VP_M117, for completeness, but it cannot be auto-uploaded. */
   #if HOTENDS >= 1
     VP_T_E0_Is, VP_T_E0_Set,// VP_E0_STATUS,
   #endif
@@ -195,7 +188,6 @@ const uint16_t VPList_PreheatABSSettings[] PROGMEM = {
 
 
 const uint16_t VPList_PrintPausingError[] PROGMEM = {
-  /* VP_M117, for completeness, but it cannot be auto-uploaded. */
   #if HOTENDS >= 1
     VP_T_E0_Is, VP_T_E0_Set,// VP_E0_STATUS,
   #endif
@@ -214,9 +206,6 @@ const uint16_t VPList_PrintPausingError[] PROGMEM = {
 };
 
 const uint16_t VPList_PrintScreen[] PROGMEM = {
-  /* VP_M117, for completeness, but it cannot be auto-uploaded. */
-  VP_M117,
-
   VP_PrintTime,
 
   #if HOTENDS >= 1
@@ -269,9 +258,6 @@ const uint16_t VPList_ZOffsetLevel[] PROGMEM = {
 };
 
 const uint16_t VPList_TuneScreen[] PROGMEM = {
-  /* VP_M117, for completeness, but it cannot be auto-uploaded. */
-  VP_M117,
-
   VP_PrintTime,
 
   #if HOTENDS >= 1
@@ -292,9 +278,6 @@ const uint16_t VPList_TuneScreen[] PROGMEM = {
 };
 
 const uint16_t VPList_Prepare[] PROGMEM = {
-  /* VP_M117, for completeness, but it cannot be auto-uploaded. */
-  VP_M117,
-
   VP_PrintTime,
 
   #if HOTENDS >= 1
@@ -313,9 +296,6 @@ const uint16_t VPList_Prepare[] PROGMEM = {
 };
 
 const uint16_t VPList_Info[] PROGMEM = {
-  /* VP_M117, for completeness, but it cannot be auto-uploaded. */
-  VP_M117,
-
   VP_PrintTime,
 
   #if HOTENDS >= 1

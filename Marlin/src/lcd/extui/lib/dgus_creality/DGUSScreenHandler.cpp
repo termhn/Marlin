@@ -1106,6 +1106,7 @@ void DGUSScreenHandler::UpdateScreenVPData() {
       else {
         auto x = dgusdisplay.GetFreeTxBuffer();
         DEBUG_ECHOLNPAIR(" tx almost full: ", x);
+        UNUSED(x);
         //DEBUG_ECHOPAIR(" update_ptr ", update_ptr);
         ScreenComplete = false;
         return;  // please call again!
