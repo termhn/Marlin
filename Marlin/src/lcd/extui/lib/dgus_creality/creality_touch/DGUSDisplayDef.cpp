@@ -65,7 +65,7 @@ const uint16_t VPList_Main[] PROGMEM = {
   #if HAS_HEATED_BED
     VP_T_Bed_Is, VP_T_Bed_Set,// VP_BED_STATUS,
   #endif
-  /*VP_XPos, VP_YPos,*/ VP_ZPos,
+  VP_Z_OFFSET,
   //VP_Fan0_Percentage,
   VP_Feedrate_Percentage,
   #if ENABLED(LCD_SET_PROGRESS_MANUALLY)
@@ -81,7 +81,7 @@ const uint16_t VPList_SDFileList[] PROGMEM = {
   #if HAS_HEATED_BED
     VP_T_Bed_Is, VP_T_Bed_Set,// VP_BED_STATUS,
   #endif
-  /*VP_XPos, VP_YPos,*/ VP_ZPos,
+  VP_Z_OFFSET,
   //VP_Fan0_Percentage,
   VP_Feedrate_Percentage,
   #if ENABLED(LCD_SET_PROGRESS_MANUALLY)
@@ -105,7 +105,7 @@ const uint16_t VPList_Control[] PROGMEM = {
   #if HAS_HEATED_BED
     VP_T_Bed_Is, VP_T_Bed_Set,// VP_BED_STATUS,
   #endif
-  /*VP_XPos, VP_YPos,*/ VP_ZPos,
+  VP_Z_OFFSET,
   //VP_Fan0_Percentage,
   VP_Feedrate_Percentage,
   #if ENABLED(LCD_SET_PROGRESS_MANUALLY)
@@ -124,7 +124,7 @@ const uint16_t VPList_Feed[] PROGMEM = {
   #if HAS_HEATED_BED
     VP_T_Bed_Is, VP_T_Bed_Set,// VP_BED_STATUS,
   #endif
-  /*VP_XPos, VP_YPos,*/ VP_ZPos,
+  VP_Z_OFFSET,
   //VP_Fan0_Percentage,
   VP_Feedrate_Percentage,
 
@@ -139,7 +139,7 @@ const uint16_t VPList_Temp[] PROGMEM = {
   #if HAS_HEATED_BED
     VP_T_Bed_Is, VP_T_Bed_Set,// VP_BED_STATUS,
   #endif
-  /*VP_XPos, VP_YPos,*/ VP_ZPos,
+  VP_Z_OFFSET,
   //VP_Fan0_Percentage,
   VP_Feedrate_Percentage,
   #if ENABLED(LCD_SET_PROGRESS_MANUALLY)
@@ -159,7 +159,7 @@ const uint16_t VPList_PreheatPLASettings[] PROGMEM = {
   #if HAS_HEATED_BED
     VP_T_Bed_Is, VP_T_Bed_Set,// VP_BED_STATUS,
   #endif
-  /*VP_XPos, VP_YPos,*/ VP_ZPos,
+  VP_Z_OFFSET,
   //VP_Fan0_Percentage,
   VP_Feedrate_Percentage,
 
@@ -176,7 +176,7 @@ const uint16_t VPList_PreheatABSSettings[] PROGMEM = {
   #if HAS_HEATED_BED
     VP_T_Bed_Is, VP_T_Bed_Set,// VP_BED_STATUS,
   #endif
-  /*VP_XPos, VP_YPos,*/ VP_ZPos,
+  VP_Z_OFFSET,
   //VP_Fan0_Percentage,
   VP_Feedrate_Percentage,
 
@@ -194,7 +194,7 @@ const uint16_t VPList_PrintPausingError[] PROGMEM = {
   #if HAS_HEATED_BED
     VP_T_Bed_Is, VP_T_Bed_Set,// VP_BED_STATUS,
   #endif
-  /*VP_XPos, VP_YPos,*/ VP_ZPos,
+  VP_Z_OFFSET,
   //VP_Fan0_Percentage,
   VP_Feedrate_Percentage,
 
@@ -216,7 +216,7 @@ const uint16_t VPList_PrintScreen[] PROGMEM = {
   #endif
 
   VP_X_POSITION, VP_Y_POSITION, VP_Z_POSITION,
-  VP_ZPos,
+  VP_Z_OFFSET,
   //VP_Fan0_Percentage,
   VP_Feedrate_Percentage,
 
@@ -234,7 +234,7 @@ const uint16_t VPList_Leveling[] PROGMEM = {
   #if HAS_HEATED_BED
     VP_T_Bed_Is, VP_T_Bed_Set,// VP_BED_STATUS,
   #endif
-  /*VP_XPos, VP_YPos,*/ VP_ZPos,
+  VP_Z_OFFSET,
   //VP_Fan0_Percentage,
   VP_Feedrate_Percentage,
 
@@ -250,7 +250,7 @@ const uint16_t VPList_ZOffsetLevel[] PROGMEM = {
   #if HAS_HEATED_BED
     VP_T_Bed_Is, VP_T_Bed_Set,// VP_BED_STATUS,
   #endif
-  /*VP_XPos, VP_YPos,*/ VP_ZPos,
+  VP_Z_OFFSET,
   //VP_Fan0_Percentage,
   VP_Feedrate_Percentage,
 
@@ -266,7 +266,7 @@ const uint16_t VPList_TuneScreen[] PROGMEM = {
   #if HAS_HEATED_BED
     VP_T_Bed_Is, VP_T_Bed_Set,// VP_BED_STATUS,
   #endif
-  /*VP_XPos, VP_YPos,*/ VP_ZPos,
+  VP_Z_OFFSET,
   //VP_Fan0_Percentage,
   VP_Feedrate_Percentage,
 
@@ -286,7 +286,7 @@ const uint16_t VPList_Prepare[] PROGMEM = {
   #if HAS_HEATED_BED
     VP_T_Bed_Is, VP_T_Bed_Set,// VP_BED_STATUS,
   #endif
-  /*VP_XPos, VP_YPos,*/ VP_ZPos,
+  VP_Z_OFFSET,
   //VP_Fan0_Percentage,
   VP_Feedrate_Percentage,
 
@@ -304,7 +304,7 @@ const uint16_t VPList_Info[] PROGMEM = {
   #if HAS_HEATED_BED
     VP_T_Bed_Is, VP_T_Bed_Set,// VP_BED_STATUS,
   #endif
-  /*VP_XPos, VP_YPos,*/ VP_ZPos,
+  VP_Z_OFFSET,
   //VP_Fan0_Percentage,
   VP_Feedrate_Percentage,
 
@@ -432,7 +432,7 @@ const struct DGUS_VP_Variable ListOfVP[] PROGMEM = {
   VPHELPER(VP_Y_POSITION, &current_position.y, ScreenHandler.HandlePositionChange, ScreenHandler.DGUSLCD_SendFloatAsIntValueToDisplay<1>),
   VPHELPER(VP_Z_POSITION, &current_position.z, ScreenHandler.HandlePositionChange, ScreenHandler.DGUSLCD_SendFloatAsIntValueToDisplay<1>),
 
-  VPHELPER(VP_ZPos, &probe.offset.z, ScreenHandler.HandleZoffsetChange, ScreenHandler.DGUSLCD_SendFloatAsIntValueToDisplay<2>),
+  VPHELPER(VP_Z_OFFSET, &probe.offset.z, ScreenHandler.HandleZoffsetChange, ScreenHandler.DGUSLCD_SendFloatAsIntValueToDisplay<2>),
 
   VPHELPER(VP_FAN_TOGGLE, &thermalManager.fan_speed[0], ScreenHandler.HandleFanControl, ScreenHandler.DGUSLCD_SendFanStatusToDisplay),
 

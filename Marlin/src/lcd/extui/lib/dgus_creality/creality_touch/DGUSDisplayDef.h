@@ -239,12 +239,7 @@ constexpr uint16_t VP_PrintTime_LEN = 6;
 // constexpr uint16_t VP_PrintsTotal = 0x3180;
 // constexpr uint16_t VP_PrintsTotal_LEN = 16;
 
-// // Actual Position
-// constexpr uint16_t VP_XPos = 0x3110;  // 4 Byte Fixed point number; format xxx.yy
-// constexpr uint16_t VP_YPos = 0x3112;  // 4 Byte Fixed point number; format xxx.yy
-constexpr uint16_t VP_ZPos = 0x1026;  // 4 Byte Fixed point number; format xxx.yy - AUTO_BED_LEVEL_ZOFFSET_VP [SD: this is actually Z-offset?]
-
-// constexpr uint16_t VP_EPos = 0x3120;  // 4 Byte Fixed point number; format xxx.yy
+constexpr uint16_t VP_Z_OFFSET = 0x1026;
 
 // // SDCard File Listing
 constexpr uint16_t VP_SD_ScrollEvent = 0x20D4; // Data: 0 for "up a directory", numbers are the amount to scroll, e.g -1 one up, 1 one down
