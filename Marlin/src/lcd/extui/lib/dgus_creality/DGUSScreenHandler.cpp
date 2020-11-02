@@ -227,27 +227,6 @@ void DGUSScreenHandler::DGUSLCD_SendStringToDisplayPGM(DGUS_VP_Variable &var) {
   }
 #endif
 
-#if ENABLED(PRINTCOUNTER)
-
-  // Send the accumulate print time to the display.
-  // It is using a hex display for that: It expects BSD coded data in the format xxyyzz
-  void DGUSScreenHandler::DGUSLCD_SendPrintAccTimeToDisplay(DGUS_VP_Variable &var) {
-    printStatistics state = print_job_timer.getStats();
-    char buf[21];
-    duration_t elapsed = state.printTime;
-    elapsed.toString(buf);
-    dgusdisplay.WriteVariable(VP_PrintAccTime, buf, var.size, true);
-  }
-
-  void DGUSScreenHandler::DGUSLCD_SendPrintsTotalToDisplay(DGUS_VP_Variable &var) {
-    printStatistics state = print_job_timer.getStats();
-    char buf[21];
-    sprintf_P(buf, PSTR("%u"), state.totalPrints);
-    dgusdisplay.WriteVariable(VP_PrintsTotal, buf, var.size, true);
-  }
-
-#endif
-
 // Send fan status value to the display.
 #if HAS_FAN
   void DGUSScreenHandler::DGUSLCD_SendFanStatusToDisplay(DGUS_VP_Variable &var) {
