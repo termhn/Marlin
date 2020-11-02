@@ -434,7 +434,7 @@ const struct DGUS_VP_Variable ListOfVP[] PROGMEM = {
 
   VPHELPER(VP_Z_OFFSET, &probe.offset.z, ScreenHandler.HandleZoffsetChange, ScreenHandler.DGUSLCD_SendFloatAsIntValueToDisplay<2>),
 
-  VPHELPER(VP_FAN_TOGGLE, &thermalManager.fan_speed[0], ScreenHandler.HandleFanControl, ScreenHandler.DGUSLCD_SendFanStatusToDisplay),
+  VPHELPER(VP_FAN_TOGGLE, &thermalManager.fan_speed[0], nullptr, ScreenHandler.DGUSLCD_SendFanStatusToDisplay),
 
   #if ENABLED(POWER_LOSS_RECOVERY)
     VPHELPER(VP_POWER_LOSS_RECOVERY, nullptr, &ScreenHandler.HandlePowerLossRecovery, nullptr),
@@ -475,7 +475,7 @@ const struct DGUS_VP_Variable ListOfVP[] PROGMEM = {
 
   // Icons
   VPHELPER(VP_STEPPERS, &ScreenHandler.are_steppers_enabled, nullptr, (ScreenHandler.DGUSLCD_SendIconValue<ICON_TOGGLE_OFF, ICON_TOGGLE_ON>)),
-  VPHELPER(VP_LED_TOGGLE, &caselight.on, nullptr, (ScreenHandler.DGUSLCD_SendIconValue<ICON_TOGGLE_ON,ICON_TOGGLE_OFF>)),
+  VPHELPER(VP_LED_TOGGLE, &caselight.on, nullptr, (ScreenHandler.DGUSLCD_SendIconValue<ICON_TOGGLE_ON, ICON_TOGGLE_OFF>)),
 
   // M117 LCD String (We don't need the string in memory but "just" push it to the display on demand, hence the nullptr
   { .VP = VP_M117, .memadr = nullptr, .size = VP_M117_LEN, .set_by_display_handler = nullptr, .send_to_display_handler =&ScreenHandler.DGUSLCD_SendStringToDisplay },
