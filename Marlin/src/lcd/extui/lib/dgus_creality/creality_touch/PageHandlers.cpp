@@ -97,7 +97,7 @@ void TempMenuHandler(DGUS_VP_Variable &var, unsigned short buttonValue) {
         case VP_BUTTON_ADJUSTENTERKEY:
             switch (buttonValue) {
                 case 3:
-                    DGUSScreenHandler::HandleFanControl(var, &buttonValue);
+                    ScreenHandler.HandleFanToggle();
                 break;
             }
 
@@ -144,7 +144,7 @@ void TuneMenuHandler(DGUS_VP_Variable &var, unsigned short buttonValue) {
                     break;
 
                 case 3:
-                    DGUSScreenHandler::HandleFanControl(var, &buttonValue);
+                    ScreenHandler.HandleFanToggle();
                 break;
 
                 case 4:

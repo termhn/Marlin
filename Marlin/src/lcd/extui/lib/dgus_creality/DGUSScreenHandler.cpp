@@ -870,13 +870,6 @@ void DGUSScreenHandler::HandlePositionChange(DGUS_VP_Variable &var, void *val_pt
   }
 #endif
 
-#if HAS_FAN
-  void DGUSScreenHandler::HandleFanControl(DGUS_VP_Variable &var, void *val_ptr) {
-    DEBUG_ECHOLNPGM("HandleFanControl");
-    *(uint8_t*)var.memadr = *(uint8_t*)var.memadr > 0 ? 0 : 255;
-  }
-#endif
-
 void DGUSScreenHandler::HandleHeaterControl(DGUS_VP_Variable &var, void *val_ptr) {
   DEBUG_ECHOLNPGM("HandleHeaterControl");
 
@@ -1029,6 +1022,12 @@ void DGUSScreenHandler::HandleLEDToggle() {
 
   caselight.on = newState;
   caselight.update(newState);
+
+  ForceCompleteUpdate();
+}
+
+void DGUSScreenHandler::HandleFanToggle() {
+  thermalManager.fan_speed[0] = (thermalManager.fan_speed[0] > 0) ? 0 : 255;
 
   ForceCompleteUpdate();
 }

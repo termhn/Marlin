@@ -92,10 +92,6 @@ public:
     // Hook for live z adjust action
     static void HandleLiveAdjustZ(DGUS_VP_Variable &var, void *val_ptr);
   #endif
-  #if HAS_FAN
-    // Hook for fan control
-    static void HandleFanControl(DGUS_VP_Variable &var, void *val_ptr);
-  #endif
   // Hook for heater control
   static void HandleHeaterControl(DGUS_VP_Variable &var, void *val_ptr);
   #if ENABLED(DGUS_PREHEAT_UI)
@@ -135,6 +131,8 @@ public:
   #endif
 
   static void HandleLEDToggle();
+
+  static void HandleFanToggle();
 
   static void HandleStepperState(bool is_enabled);
 

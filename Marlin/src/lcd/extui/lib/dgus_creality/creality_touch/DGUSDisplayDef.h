@@ -350,7 +350,3 @@ constexpr uint16_t VP_BUTTON_MOVEKEY = 0x1046;
 // Icons
 constexpr uint16_t ICON_TOGGLE_ON = 1;
 constexpr uint16_t ICON_TOGGLE_OFF = 2;
-
-
-// Additional variables to migrate later
-extern bool LEDStatus;
