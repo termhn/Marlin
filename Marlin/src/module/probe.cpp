@@ -505,6 +505,17 @@ float Probe::run_z_probe(const bool sanity_check/*=true*/) {
   DEBUG_SECTION(log_probe, "Probe::run_z_probe", DEBUGGING(LEVELING));
 
   auto try_to_probe = [&](PGM_P const plbl, const float &z_probe_low_point, const feedRate_t fr_mm_s, const bool scheck, const float clearance) {
+    #if ENABLED(FIX_MOUNTED_PROBE)
+      if((0 == READ(OPTO_SWITCH_PIN)))
+      {
+        SERIAL_ECHOLN("FIX_MOUNTED_PROBE: Taring the probe");
+        WRITE(COM_PIN, HIGH);
+        delay(200);
+        WRITE(COM_PIN, LOW);
+        delay(200);
+      }
+    #endif
+
     // Do a first probe at the fast speed
     const bool probe_fail = probe_down_to_z(z_probe_low_point, fr_mm_s),            // No probe trigger?
                early_fail = (scheck && current_position.z > -offset.z + clearance); // Probe triggered too high?
@@ -554,18 +565,6 @@ float Probe::run_z_probe(const bool sanity_check/*=true*/) {
 
   #if EXTRA_PROBING > 0
     float probes[TOTAL_PROBING];
-  #endif
-
-  #if ENABLED(FIX_MOUNTED_PROBE)
-    if((0 == READ(OPTO_SWITCH_PIN)) && (is_homing_z == true))
-    {
-      SERIAL_ECHOLN("FIX_MOUNTED_PROBE: Considering homing complete");
-      WRITE(COM_PIN, HIGH);
-      delay(200);
-      WRITE(COM_PIN, LOW);
-      delay(200);
-      is_homing_z = false;
-    }
   #endif
 
   #if TOTAL_PROBING > 2
@@ -708,9 +707,10 @@ float Probe::probe_at_point(const float &rx, const float &ry, const ProbePtRaise
   #ifdef FIX_MOUNTED_PROBE
     if(0 == READ(OPTO_SWITCH_PIN))
     {
-      SERIAL_ECHOLN("FIX_MOUNTED_PROBE: Setting COM_PIN low");
-      delay(100);
+      SERIAL_ECHOLN("FIX_MOUNTED_PROBE: Taring probe");
       WRITE(COM_PIN, LOW);
+      delay(100);
+      WRITE(COM_PIN, 1);
       delay(200);
     }
   #endif
@@ -727,11 +727,6 @@ float Probe::probe_at_point(const float &rx, const float &ry, const ProbePtRaise
     if (verbose_level > 2)
       SERIAL_ECHOLNPAIR("Bed X: ", LOGICAL_X_POSITION(rx), " Y: ", LOGICAL_Y_POSITION(ry), " Z: ", measured_z);
   }
-
-  #ifdef FIX_MOUNTED_PROBE
-    SERIAL_ECHOLN("FIX_MOUNTED_PROBE: Setting COM_PIN high");
-    WRITE(COM_PIN, 1);
-  #endif
 
   feedrate_mm_s = old_feedrate_mm_s;
 

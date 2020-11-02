@@ -476,6 +476,7 @@ void GcodeSuite::G28() {
   TERN_(EXTENSIBLE_UI, ExtUI::onHomingComplete());
 
   is_homing_z = false;
+  SERIAL_ECHOLN("=== is_homing_z = false (G28) ");
 
   report_current_position();
 

@@ -464,6 +464,8 @@ void do_blocking_move_to(const float rx, const float ry, const float rz, const f
     current_position.set(rx, ry);
     line_to_current_position(xy_feedrate);
 
+    planner.synchronize();
+
     // If Z needs to lower, do it after moving XY
     if (current_position.z > rz) {
       current_position.z = rz;

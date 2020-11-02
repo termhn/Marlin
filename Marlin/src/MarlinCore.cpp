@@ -751,14 +751,32 @@ void idle(TERN_(ADVANCED_PAUSE_FEATURE, bool no_stepper_sleep/*=false*/)) {
   TERN(DWIN_CREALITY_LCD, DWIN_Update(), ui.update());
 
   #if PIN_EXISTS(OPTO_SWITCH)
-    static bool optoSwitch;
+    static bool optoSwitch = true;
+    static bool probeTared = false;
     if (optoSwitch != READ(OPTO_SWITCH_PIN)) {
       optoSwitch = READ(OPTO_SWITCH_PIN);
       SERIAL_ECHOLNPAIR("Opto switch says: ", optoSwitch);
     }
 
+    bool is_in_probing_zone = !optoSwitch;   
+    if (!is_in_probing_zone && probeTared) {
+      SERIAL_ECHOLN("FIX_MOUNTED_PROBE: Preparing for next probe tare");
+      probeTared = false;
+    }
+
+    #if ENABLED(FIX_MOUNTED_PROBE)
+      if (is_in_probing_zone && is_homing_z && !probeTared) {
+          SERIAL_ECHOLN("FIX_MOUNTED_PROBE: Taring probe");
+          WRITE(COM_PIN, LOW);
+          delay(100);
+          WRITE(COM_PIN, HIGH);
+          delay(200);
+
+          probeTared = true;
+      }
+    #endif
+
     if (is_homing_z) {
-      bool is_in_probing_zone = READ(OPTO_SWITCH_PIN) == 0;
       endstops.enable_z_probe(is_in_probing_zone);
     }
   #endif
