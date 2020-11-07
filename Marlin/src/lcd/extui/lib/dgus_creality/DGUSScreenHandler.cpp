@@ -456,11 +456,7 @@ void DGUSScreenHandler::ScreenConfirmedOK(DGUS_VP_Variable &var, void *val_ptr) 
 }
 
 void DGUSScreenHandler::HandleZoffsetChange(DGUS_VP_Variable &var, void *val_ptr) {
-  if (current_screen != DGUSLCD_SCREEN_TUNING) {
-    HandleLiveAdjustZ(var, val_ptr);
-  } else {
-    HandleProbeOffsetZChanged(var, val_ptr);
-  }
+  HandleLiveAdjustZ(var, val_ptr);
 }
 
 void DGUSScreenHandler::OnMeshLevelingStart() {
@@ -794,17 +790,6 @@ void DGUSScreenHandler::HandleFeedAmountChanged(DGUS_VP_Variable &var, void *val
     return;
   }
 
-#if HAS_BED_PROBE
-  void DGUSScreenHandler::HandleProbeOffsetZChanged(DGUS_VP_Variable &var, void *val_ptr) {
-    DEBUG_ECHOLNPGM("HandleProbeOffsetZChanged");
-
-    const float offset = float(int16_t(swap16(*(uint16_t*)val_ptr))) / 100.0f;
-    ExtUI::setZOffset_mm(offset);
-    ScreenHandler.skipVP = var.VP; // don't overwrite value the next update time as the display might autoincrement in parallel
-    return;
-  }
-#endif
-
 void DGUSScreenHandler::HandlePositionChange(DGUS_VP_Variable &var, void *val_ptr) {
   DEBUG_ECHOLNPGM("HandlePositionChange");
 
@@ -841,10 +826,27 @@ void DGUSScreenHandler::HandlePositionChange(DGUS_VP_Variable &var, void *val_pt
   void DGUSScreenHandler::HandleLiveAdjustZ(DGUS_VP_Variable &var, void *val_ptr) {
     DEBUG_ECHOLNPGM("HandleLiveAdjustZ");
 
-    int16_t flag = swap16(*(uint16_t*)val_ptr);
-    int16_t steps = flag ? -5 : 5;
+    float absoluteAmount = float(swap16(*(uint16_t*)val_ptr))  / 100.0f;
+    float existingAmount = ExtUI::getZOffset_mm();
+    float difference = absoluteAmount - existingAmount;
+
+    SERIAL_ECHO("- Absolute: ");
+    SERIAL_ECHO_F(absoluteAmount);
+    SERIAL_ECHO("- Existing: ");
+    SERIAL_ECHO_F(existingAmount);
+    SERIAL_ECHO(" - Difference: ");
+    SERIAL_ECHO_F(difference);
+
+    int16_t steps = ExtUI::mmToWholeSteps(difference, ExtUI::axis_t::Z);
+
+    SERIAL_ECHO(" - Steps: ");
+    SERIAL_ECHO_F(steps);
+    SERIAL_ECHOLN(";");
+
     ExtUI::smartAdjustAxis_steps(steps, ExtUI::axis_t::Z, true);
+    
     ScreenHandler.ForceCompleteUpdate();
+    ScreenHandler.skipVP = var.VP; // don't overwrite value the next update time as the display might autoincrement in parallel
     return;
   }
 #endif

@@ -82,8 +82,6 @@ public:
     // Hook for "Change probe offset z"
     static void HandleZoffsetChange(DGUS_VP_Variable &var, void *val_ptr);
 
-    static void HandleProbeOffsetZChanged(DGUS_VP_Variable &var, void *val_ptr);
-
     static void OnMeshLevelingStart();
 
     static void OnMeshLevelingUpdate(const int8_t xpos, const int8_t ypos);

@@ -63,13 +63,13 @@ void LevelingModeHandler(DGUS_VP_Variable &var, unsigned short buttonValue) {
 
                 case 2:
                     // Increase Z-offset
-                    ExtUI::smartAdjustAxis_steps(5, ExtUI::axis_t::Z, true);;
+                    ExtUI::smartAdjustAxis_steps(ExtUI::mmToWholeSteps(0.01, ExtUI::axis_t::Z), ExtUI::axis_t::Z, true);;
                     ScreenHandler.ForceCompleteUpdate();
                     break;
 
                 case 3:
                     // Decrease Z-offset
-                    ExtUI::smartAdjustAxis_steps(-5, ExtUI::axis_t::Z, true);;
+                    ExtUI::smartAdjustAxis_steps(ExtUI::mmToWholeSteps(-0.01, ExtUI::axis_t::Z), ExtUI::axis_t::Z, true);;
                     ScreenHandler.ForceCompleteUpdate();
                     break;
             }
