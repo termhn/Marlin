@@ -54,11 +54,7 @@ void LevelingModeHandler(DGUS_VP_Variable &var, unsigned short buttonValue) {
         case VP_BUTTON_BEDLEVELKEY:
             switch (buttonValue) {
                 case 1:
-                    if (ExtUI::isAxisPositionKnown(ExtUI::axis_t::X) && ExtUI::isAxisPositionKnown(ExtUI::axis_t::Y)) {
-                        ExtUI::injectCommands_P("G28 Z");
-                    } else {
-                        ExtUI::injectCommands_P("G28");
-                    }
+                    ExtUI::injectCommands_P("G28");
                 break;
 
                 case 2:
