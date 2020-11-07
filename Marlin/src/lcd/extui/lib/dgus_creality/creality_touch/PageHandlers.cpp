@@ -55,6 +55,7 @@ void LevelingModeHandler(DGUS_VP_Variable &var, unsigned short buttonValue) {
             switch (buttonValue) {
                 case 1:
                     ExtUI::injectCommands_P("G28");
+                    do_blocking_move_to_z(0, Z_PROBE_SPEED_FAST);
                 break;
 
                 case 2:

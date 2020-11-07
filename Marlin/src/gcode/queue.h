@@ -97,7 +97,7 @@ public:
   }
 
   /**
-   * Enqueue and return only when commands are actually enqueued
+   * Enqueue and return only when commands are actually enqueuedinjected_commands_P
    */
   static void enqueue_one_now(const char* cmd);
 
