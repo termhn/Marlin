@@ -513,12 +513,14 @@ float Probe::run_z_probe(const bool sanity_check/*=true*/) {
         delay(200);
         WRITE(COM_PIN, LOW);
         delay(200);
+
+        endstops.hit_on_purpose();
       }
     #endif
   };
 
   auto try_to_probe = [&](PGM_P const plbl, const float &z_probe_low_point, const feedRate_t fr_mm_s, const bool scheck, const float clearance) {
-    tare_probe(/*force: */ false);
+    tare_probe(/*force: */ true);
 
     // Do a first probe at the fast speed
     const bool probe_fail = probe_down_to_z(z_probe_low_point, fr_mm_s),            // No probe trigger?
