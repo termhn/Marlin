@@ -717,19 +717,13 @@ float Probe::probe_at_point(const float &rx, const float &ry, const ProbePtRaise
   const float old_feedrate_mm_s = feedrate_mm_s;
   feedrate_mm_s = XY_PROBE_FEEDRATE_MM_S;
 
+  #ifdef FIX_MOUNTED_PROBE
+    SERIAL_ECHOLN("FIX_MOUNTED_PROBE: Disabling probe");
+    WRITE(COM_PIN, LOW);
+  #endif
+
   // Move the probe to the starting XYZ
   do_blocking_move_to(npos);
-
-  #ifdef FIX_MOUNTED_PROBE
-    if(0 == READ(OPTO_SWITCH_PIN))
-    {
-      SERIAL_ECHOLN("FIX_MOUNTED_PROBE: Taring probe");
-      WRITE(COM_PIN, LOW);
-      delay(100);
-      WRITE(COM_PIN, 1);
-      delay(200);
-    }
-  #endif
 
   float measured_z = NAN;
   if (!deploy()) measured_z = run_z_probe(sanity_check) + offset.z;
