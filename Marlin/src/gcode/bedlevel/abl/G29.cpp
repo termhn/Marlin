@@ -184,21 +184,6 @@ G29_TYPE GcodeSuite::G29() {
 
   TERN_(EXTENSIBLE_UI, ExtUI::onMeshLevelingStart());
 
-  #if ENABLED(AUTOLEVEL_NEEDS_PREHEATING)
-    {
-      uint16_t hotendTemperature = AUTOLEVEL_PREHEAT_NOZZLE_TEMP;
-      uint16_t bedTemperature = AUTOLEVEL_PREHEAT_BED_TEMP;
-      SERIAL_ECHOLNPAIR("Preheating hot-end to ", hotendTemperature);
-      SERIAL_ECHOLNPAIR("Preheating bed to ", bedTemperature);
-
-      thermalManager.setTargetHotend(hotendTemperature, 0);
-      thermalManager.setTargetBed(bedTemperature);
-
-      thermalManager.wait_for_hotend(0);
-      thermalManager.wait_for_bed_heating();
-    }
-  #endif
-
   const bool seenA = TERN0(PROBE_MANUALLY, parser.seen('A')),
          no_action = seenA || seenQ,
               faux = ENABLED(DEBUG_LEVELING_FEATURE) && DISABLED(PROBE_MANUALLY) ? parser.boolval('C') : no_action;
@@ -333,6 +318,21 @@ G29_TYPE GcodeSuite::G29() {
       constexpr bool seen_w = false;
 
     #endif
+    
+#if ENABLED(AUTOLEVEL_NEEDS_PREHEATING)
+    if (!seen_w && thermalManager.degTargetHotend(0) < AUTOLEVEL_PREHEAT_NOZZLE_TEMP) {
+      uint16_t hotendTemperature = AUTOLEVEL_PREHEAT_NOZZLE_TEMP;
+      uint16_t bedTemperature = AUTOLEVEL_PREHEAT_BED_TEMP;
+      SERIAL_ECHOLNPAIR("Preheating hot-end to ", hotendTemperature);
+      SERIAL_ECHOLNPAIR("Preheating bed to ", bedTemperature);
+
+      thermalManager.setTargetHotend(hotendTemperature, 0);
+      thermalManager.setTargetBed(bedTemperature);
+
+      thermalManager.wait_for_hotend(0);
+      thermalManager.wait_for_bed_heating();
+    }
+#endif
 
     // Jettison bed leveling data
     if (!seen_w && parser.seen('J')) {
