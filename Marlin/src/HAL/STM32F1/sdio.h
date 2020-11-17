@@ -105,7 +105,7 @@
 #endif
 
 #ifndef SDIO_READ_RETRIES
-  #define SDIO_READ_RETRIES                  3
+  #define SDIO_READ_RETRIES                  9
 #endif
 
 // ------------------------
