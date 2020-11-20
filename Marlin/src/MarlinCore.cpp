@@ -1120,7 +1120,7 @@ void setup() {
     SETUP_RUN(ui.reset_status());     // Load welcome message early. (Retained if no errors exist.)
   #endif
 
-  #ifdef PIN_EXISTS(COM)
+  #if PIN_EXISTS(COM)
     SERIAL_ECHOLN("Init COM_PIN");
     OUT_WRITE(COM_PIN, HIGH);
   #endif
