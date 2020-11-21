@@ -106,7 +106,7 @@
 #define USB_CONNECT_PIN    PA14
 #define USB_CONNECT_INVERTING false
 
-#define LED_CONTROL_PIN    PA13
+#define CASE_LIGHT_PIN    PA13
 #define FIL_RUNOUT_PIN     PC15
 
 #define OPTO_SWITCH_PIN    PC2
