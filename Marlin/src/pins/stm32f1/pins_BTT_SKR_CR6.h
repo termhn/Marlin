@@ -21,32 +21,50 @@
  */
 #pragma once
 
-#include "pins_BTT_SKR_MINI_E3_common.h"
-
 #define BOARD_INFO_NAME "BTT SKR CR-6"
 
 //
 // EEPROM
 //
 /* I2C */
-// #define I2C_EEPROM
-// #define E2END 0x3FFF   // 16Kb (24c16)
-#define MYI2C_EEPROM      // EEPROM on I2C-0
 #define IIC_EEPROM_SDA       PB7
 #define IIC_EEPROM_SCL       PB6
+
+#define I2C_EEPROM
+#define MARLIN_EEPROM_SIZE 0x1000                 // 4KB
+#define E2END                (MARLIN_EEPROM_SIZE - 1) // 2KB
 
 #define X_MIN_PIN          PC0
 // #define X_MAX_PIN          PA7
 #define Y_MIN_PIN          PC1
 
+//
+// Steppers
+//
+#define X_ENABLE_PIN        PB14
+#define X_STEP_PIN          PB13
+#define X_DIR_PIN           PB12
+
+#define Y_ENABLE_PIN        PB11
+#define Y_STEP_PIN          PB10
+#define Y_DIR_PIN           PB2
+
+//#define Z_ENABLE_PIN        PA0
+#define Z_ENABLE_PIN        PB1
+#define Z_STEP_PIN          PB0
+#define Z_DIR_PIN           PC5
+
+#define E0_ENABLE_PIN       PD2
+#define E0_STEP_PIN         PB3
+#define E0_DIR_PIN          PB4
+
 #ifdef BLTOUCH
-  #define Z_MIN_PIN        PB1  // BLTouch IN PIN
-  #define SERVO0_PIN       PB0  // BLTouch OUT PIN
+  #error "Not supported"
 #elif ENABLED(FIX_MOUNTED_PROBE)
-  #define Z_MIN_PIN        PC2
-  #define COM_PIN          PC14//PA1
+  #define Z_MIN_PIN        PC14
+  #define COM_PIN          PA1//PA1
 #else
-  #define Z_MIN_PIN        PA7
+  #error "Not supported"
 #endif
 
 //
@@ -63,25 +81,70 @@
 #define HEATER_0_PIN       PC8   // HEATER1
 #define HEATER_BED_PIN     PC9   // HOT BED
 
-#define FAN_PIN            PC7   // FAN
+#define FAN_PIN            PC6   // FAN
 #define FAN_SOFT_PWM
 
+#define CONTROLLER_FAN_PIN  PC7
 
+#if ENABLED(CR10_STOCKDISPLAY)
+
+    #define BTN_ENC            PA15
+    #define BTN_EN1            PA9
+    #define BTN_EN2            PA10
+
+    #define LCD_PINS_RS        PB8
+    #define LCD_PINS_ENABLE    PB15
+    #define LCD_PINS_D4        PB9
+
+    #define BEEPER_PIN          PB5
+
+#endif
+
+//
+// USB connect control
+//
+#define USB_CONNECT_PIN    PA14
+#define USB_CONNECT_INVERTING false
+
+#define LED_CONTROL_PIN    PA13
+#define FIL_RUNOUT_PIN     PC15
+
+#define OPTO_SWITCH_PIN    PC2
+
+#define HAS_ONBOARD_SD
+
+#ifndef SDCARD_CONNECTION
+  #define SDCARD_CONNECTION ONBOARD
+#endif
+
+#define ON_BOARD_SPI_DEVICE 1    // SPI1
+#define ONBOARD_SD_CS_PIN  PA4   // Chip select for "System" SD card
 /* SD card detect */
 #define SD_DETECT_PIN      PC4
-
-#define LED_CONTROL_PIN    PA8
-#define CHECK_MATWEIAL     PC15
-// #define OPTO_SWITCH_PIN    PB2   // certification
-#define OPTO_SWITCH_PIN    PA1
+#define NEOPIXEL_PIN       PA8     
 
 /**
  * TMC2209 stepper drivers
  * Hardware serial communication ports.
  */
-#if HAS_DRIVER(TMC2209)
-  #define X_HARDWARE_SERIAL  Serial4
-  #define Y_HARDWARE_SERIAL  Serial4
-  #define Z_HARDWARE_SERIAL  Serial4
-  #define E0_HARDWARE_SERIAL Serial4
+#if HAS_TMC220x
+
+  //
+  // TMC2208 mode
+  //
+  // #define TMC2208_STANDALONE
+
+  #define X_HARDWARE_SERIAL  MSerial4
+  #define Y_HARDWARE_SERIAL  MSerial4
+  #define Z_HARDWARE_SERIAL  MSerial4
+  #define E0_HARDWARE_SERIAL MSerial4
+
+  //
+  // TMC2208 Software serial
+  //
+  // #define HAVE_SW_SERIAL
+
+  // Reduce baud rate to improve software serial reliability
+  // #define TMC_BAUD_RATE 19200
+
 #endif
