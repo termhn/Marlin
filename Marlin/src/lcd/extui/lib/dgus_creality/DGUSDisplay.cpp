@@ -91,10 +91,10 @@ void DGUSDisplay::ResetDisplay() {
 }
 
 void DGUSDisplay::ReadVariable(uint16_t adr) {
-  WriteHeader(adr, DGUS_CMD_READVAR, sizeof(u_int8_t));
+  WriteHeader(adr, DGUS_CMD_READVAR, sizeof(uint8_t));
 
   // Specify to read one byte
-  dgusserial.write(static_cast<u_int8_t>(1));
+  dgusserial.write(static_cast<uint8_t>(1));
 }
 
 void DGUSDisplay::WriteVariable(uint16_t adr, const void* values, uint8_t valueslen, bool isstr) {
