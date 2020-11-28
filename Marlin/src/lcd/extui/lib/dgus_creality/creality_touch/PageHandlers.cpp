@@ -160,8 +160,11 @@ void PrintPausedMenuHandler(DGUS_VP_Variable &var, unsigned short buttonValue) {
     switch (var.VP) {
         case VP_BUTTON_RESUMEPRINTKEY:
             runout.reset();
-            ExtUI::resumePrint();
-            ScreenHandler.GotoScreen(DGUSLCD_SCREEN_PRINT_RUNNING);
+            
+            if (!ScreenHandler.HandlePendingUserConfirmation()) {
+                ExtUI::resumePrint();
+                ScreenHandler.GotoScreen(DGUSLCD_SCREEN_PRINT_RUNNING);
+            }
             break;
     }
 }

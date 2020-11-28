@@ -243,6 +243,8 @@ public:
 
   static inline void SetupConfirmAction( void (*f)()) { confirm_action_cb = f; }
 
+  static bool HandlePendingUserConfirmation();
+
   static float feed_amount;
   static bool are_steppers_enabled;
 

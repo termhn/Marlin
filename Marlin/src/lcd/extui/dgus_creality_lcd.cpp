@@ -70,7 +70,11 @@ namespace ExtUI {
     ScreenHandler.Buzzer(frequency, duration);
   }
 
+bool hasPrintTimer = false;
+
   void onPrintTimerStarted() {
+    hasPrintTimer = true;
+
     ScreenHandler.GotoScreen(DGUSLCD_SCREEN_PRINT_RUNNING);
   }
 
@@ -82,6 +86,8 @@ namespace ExtUI {
   }
 
   void onPrintTimerStopped() {
+    hasPrintTimer = false;
+
     ScreenHandler.GotoScreen(DGUSLCD_SCREEN_PRINT_FINISH);
   }
 
@@ -91,7 +97,7 @@ namespace ExtUI {
 
   void onUserConfirmed() {
     DEBUG_ECHOLN("User confirmation invoked");
-    
+
     ScreenHandler.SetupConfirmAction(nullptr);
     ExtUI::setUserConfirmed();
   }
@@ -102,10 +108,13 @@ namespace ExtUI {
 
       ScreenHandler.setstatusmessagePGM(msg);
       ScreenHandler.SetupConfirmAction(onUserConfirmed);
-
-      ScreenHandler.GotoScreen(DGUSLCD_SCREEN_POPUP);
-
       ScreenHandler.sendinfoscreen(PSTR("Confirmation required"), msg, NUL_STR, NUL_STR, true, true, false, true);
+
+      if (hasPrintTimer) {
+        ScreenHandler.GotoScreen(DGUSLCD_SCREEN_PRINT_PAUSED);
+      } else {
+        ScreenHandler.GotoScreen(DGUSLCD_SCREEN_POPUP);
+      }
     }
     else if (ScreenHandler.getCurrentScreen() == DGUSLCD_SCREEN_POPUP) {
       DEBUG_ECHOLNPAIR("User confirmation canceled");
@@ -114,6 +123,8 @@ namespace ExtUI {
       ScreenHandler.setstatusmessagePGM(nullptr);
       ScreenHandler.PopToOldScreen();
     }
+
+    while (!ScreenHandler.loop());  // Wait while anything is left to be sent
   }
 
   void onStatusChanged(const char * const msg) { ScreenHandler.setstatusmessage(msg); }

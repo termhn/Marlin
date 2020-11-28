@@ -437,6 +437,20 @@ void DGUSScreenHandler::Buzzer(const uint16_t frequency, const uint16_t duration
 }
 #endif
 
+bool DGUSScreenHandler::HandlePendingUserConfirmation() {
+  if (!ScreenHandler.confirm_action_cb) {
+    return false;
+  }
+
+  ScreenHandler.GotoScreen(DGUSLCD_SCREEN_PRINT_RUNNING);
+  while (!ScreenHandler.loop());  // Wait while anything is left to be sent
+
+  // We might be re-entrant here
+  auto confirmAction = ScreenHandler.confirm_action_cb;
+  ScreenHandler.confirm_action_cb = nullptr;
+  confirmAction();
+}
+
 void DGUSScreenHandler::OnHomingStart() {
   ScreenHandler.GotoScreen(DGUSLCD_SCREEN_AUTOHOME);
 }
