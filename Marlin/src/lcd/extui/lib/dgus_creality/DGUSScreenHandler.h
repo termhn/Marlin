@@ -126,6 +126,8 @@ public:
     static void SDCardRemoved();
     /// Marlin informed us about a bad SD Card.
     static void SDCardError();
+
+    static void SetPrintingFromHost();
   #endif
 
   static void HandleLEDToggle();

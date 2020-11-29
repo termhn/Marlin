@@ -349,6 +349,11 @@ void DGUSScreenHandler::DGUSLCD_SendHeaterStatusToDisplay(DGUS_VP_Variable &var)
     HandleUserConfirmationPopUp(VP_SD_FileSelectConfirm, PSTR("Print file"), filelist.filename(), PSTR("from SD Card?"), nullptr, true, false, true, true);
   }
 
+  void DGUSScreenHandler::SetPrintingFromHost() {
+    const char* printFromHostString = PSTR("Printing from host");
+    dgusdisplay.WriteVariablePGM(VP_SD_Print_Filename, printFromHostString, strlen(printFromHostString), true);
+  }
+
   void DGUSScreenHandler::DGUSLCD_SD_StartPrint(DGUS_VP_Variable &var, void *val_ptr) {
     if (!filelist.seek(file_to_print)) return;
     ExtUI::printFile(filelist.shortFilename());

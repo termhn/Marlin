@@ -75,6 +75,10 @@ bool hasPrintTimer = false;
   void onPrintTimerStarted() {
     hasPrintTimer = true;
 
+    if (!ExtUI::isPrintingFromMedia()) {
+      ScreenHandler.SetPrintingFromHost();
+    }
+
     ScreenHandler.GotoScreen(DGUSLCD_SCREEN_PRINT_RUNNING);
   }
 
