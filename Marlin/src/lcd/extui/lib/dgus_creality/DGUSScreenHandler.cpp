@@ -793,10 +793,9 @@ void DGUSScreenHandler::HandleStepPerMMExtruderChanged(DGUS_VP_Variable &var, vo
 
 void DGUSScreenHandler::HandleFeedAmountChanged(DGUS_VP_Variable &var, void *val_ptr) {
     int16_t movevalue = swap16(*(uint16_t*)val_ptr);
-    float target = movevalue * 0.01f;
+    float target = movevalue * 0.1f;
 
     DEBUG_ECHOLNPAIR("HandleFeedAmountChanged ", target);
-
 
     *(float *)var.memadr = target;
 

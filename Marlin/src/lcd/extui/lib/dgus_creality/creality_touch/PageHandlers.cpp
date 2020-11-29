@@ -232,46 +232,43 @@ void PreheatSettingsScreenHandler(DGUS_VP_Variable &var, unsigned short buttonVa
     }
 }
 
+ void change_filament_with_temp(PGM_P command, const uint16_t celsius) {
+    thermalManager.setTargetHotend(celsius, ExtUI::H0);
+
+    char cmd[32];
+    sprintf_P(cmd, command, ScreenHandler.feed_amount);
+    
+    SERIAL_ECHOPAIR("Injecting command: ", cmd);
+    ExtUI::injectCommands(cmd);
+
+    SERIAL_ECHOPGM_P("- waiting for queue");
+    queue.advance();
+
+    SERIAL_ECHOPGM_P("- done");
+}
+
 void FeedHandler(DGUS_VP_Variable &var, unsigned short buttonValue) {
     if (var.VP != VP_BUTTON_HEATLOADSTARTKEY) return;
 
+    // Common for load/unload -> determine minimum temperature
+    uint16_t celsius = ExtUI::getActualTemp_celsius(ExtUI::H0);
+    if (celsius < PREHEAT_1_TEMP_HOTEND) {
+        celsius = PREHEAT_1_TEMP_HOTEND;
+    }
+
     switch (buttonValue) {
         case 1:
-            if (ExtUI::getActualTemp_celsius(ExtUI::H0) < PREHEAT_1_TEMP_HOTEND) {
-                ExtUI::setTargetTemp_celsius(PREHEAT_1_TEMP_HOTEND, ExtUI::H0);
-
-                thermalManager.wait_for_hotend(0);
-            }
-
             dgusdisplay.WriteVariable(VP_FEED_PROGRESS, static_cast<int16_t>(10));
 
-            load_filament(
-                FILAMENT_CHANGE_SLOW_LOAD_LENGTH,
-                FILAMENT_CHANGE_FAST_LOAD_LENGTH,
-                ScreenHandler.feed_amount,
-                FILAMENT_CHANGE_ALERT_BEEPS,
-                false,
-                thermalManager.still_heating(0),
-                PAUSE_MODE_LOAD_FILAMENT
-            );
+            change_filament_with_temp(PSTR("M701 L%f"), celsius);
 
             dgusdisplay.WriteVariable(VP_FEED_PROGRESS, static_cast<int16_t>(0));
         break;
 
         case 2:
-            if (ExtUI::getActualTemp_celsius(ExtUI::H0) < PREHEAT_1_TEMP_HOTEND) {
-                ExtUI::setTargetTemp_celsius(PREHEAT_1_TEMP_HOTEND, ExtUI::H0);
-
-                thermalManager.wait_for_hotend(0);
-            }
-
             dgusdisplay.WriteVariable(VP_FEED_PROGRESS, static_cast<int16_t>(10));
 
-            unload_filament(
-                ScreenHandler.feed_amount,
-                false,
-                PAUSE_MODE_UNLOAD_FILAMENT
-            );
+            change_filament_with_temp(PSTR("M702 U%f"), celsius);
 
             dgusdisplay.WriteVariable(VP_FEED_PROGRESS, static_cast<int16_t>(0));
         break;
