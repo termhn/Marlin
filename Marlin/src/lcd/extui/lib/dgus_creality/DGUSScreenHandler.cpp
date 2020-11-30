@@ -349,6 +349,11 @@ void DGUSScreenHandler::DGUSLCD_SendHeaterStatusToDisplay(DGUS_VP_Variable &var)
     HandleUserConfirmationPopUp(VP_SD_FileSelectConfirm, PSTR("Print file"), filelist.filename(), PSTR("from SD Card?"), nullptr, true, false, true, true);
   }
 
+  void DGUSScreenHandler::SetPrintingFromHost() {
+    const char* printFromHostString = PSTR("Printing from host");
+    dgusdisplay.WriteVariablePGM(VP_SD_Print_Filename, printFromHostString, strlen(printFromHostString), true);
+  }
+
   void DGUSScreenHandler::DGUSLCD_SD_StartPrint(DGUS_VP_Variable &var, void *val_ptr) {
     if (!filelist.seek(file_to_print)) return;
     ExtUI::printFile(filelist.shortFilename());
@@ -436,6 +441,20 @@ void DGUSScreenHandler::Buzzer(const uint16_t frequency, const uint16_t duration
   dgusdisplay.WriteVariable(0xA0, buzzerCommand, sizeof(buzzerCommand));
 }
 #endif
+
+bool DGUSScreenHandler::HandlePendingUserConfirmation() {
+  if (!ScreenHandler.confirm_action_cb) {
+    return false;
+  }
+
+  ScreenHandler.GotoScreen(DGUSLCD_SCREEN_PRINT_RUNNING);
+  while (!ScreenHandler.loop());  // Wait while anything is left to be sent
+
+  // We might be re-entrant here
+  auto confirmAction = ScreenHandler.confirm_action_cb;
+  ScreenHandler.confirm_action_cb = nullptr;
+  confirmAction();
+}
 
 void DGUSScreenHandler::OnHomingStart() {
   ScreenHandler.GotoScreen(DGUSLCD_SCREEN_AUTOHOME);
@@ -779,10 +798,9 @@ void DGUSScreenHandler::HandleStepPerMMExtruderChanged(DGUS_VP_Variable &var, vo
 
 void DGUSScreenHandler::HandleFeedAmountChanged(DGUS_VP_Variable &var, void *val_ptr) {
     int16_t movevalue = swap16(*(uint16_t*)val_ptr);
-    float target = movevalue * 0.01f;
+    float target = movevalue * 0.1f;
 
     DEBUG_ECHOLNPAIR("HandleFeedAmountChanged ", target);
-
 
     *(float *)var.memadr = target;
 

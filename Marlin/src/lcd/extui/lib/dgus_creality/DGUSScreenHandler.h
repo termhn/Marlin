@@ -126,6 +126,8 @@ public:
     static void SDCardRemoved();
     /// Marlin informed us about a bad SD Card.
     static void SDCardError();
+
+    static void SetPrintingFromHost();
   #endif
 
   static void HandleLEDToggle();
@@ -242,6 +244,8 @@ public:
   static void updateCurrentScreen(DGUSLCD_Screens current);
 
   static inline void SetupConfirmAction( void (*f)()) { confirm_action_cb = f; }
+
+  static bool HandlePendingUserConfirmation();
 
   static float feed_amount;
   static bool are_steppers_enabled;
