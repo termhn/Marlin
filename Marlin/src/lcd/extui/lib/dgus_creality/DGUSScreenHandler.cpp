@@ -454,6 +454,8 @@ bool DGUSScreenHandler::HandlePendingUserConfirmation() {
   auto confirmAction = ScreenHandler.confirm_action_cb;
   ScreenHandler.confirm_action_cb = nullptr;
   confirmAction();
+
+  return false;
 }
 
 void DGUSScreenHandler::OnHomingStart() {
