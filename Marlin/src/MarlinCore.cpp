@@ -182,6 +182,10 @@
   #include "feature/runout.h"
 #endif
 
+#if ENABLED(EXTENSIBLE_UI)
+  #include "lcd/extui/ui_api.h"
+#endif
+
 #if HAS_Z_SERVO_PROBE
   #include "module/probe.h"
 #endif
