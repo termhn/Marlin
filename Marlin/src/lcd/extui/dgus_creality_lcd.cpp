@@ -102,7 +102,6 @@ bool hasPrintTimer = false;
   void onUserConfirmed() {
     DEBUG_ECHOLN("User confirmation invoked");
 
-    ScreenHandler.SetupConfirmAction(nullptr);
     ExtUI::setUserConfirmed();
   }
 
@@ -111,7 +110,6 @@ bool hasPrintTimer = false;
       DEBUG_ECHOLNPAIR("User confirmation requested: ", msg);
 
       ScreenHandler.setstatusmessagePGM(msg);
-      ScreenHandler.SetupConfirmAction(onUserConfirmed);
       ScreenHandler.sendinfoscreen(PSTR("Confirmation required"), msg, NUL_STR, NUL_STR, true, true, false, true);
 
       if (hasPrintTimer) {
@@ -123,7 +121,6 @@ bool hasPrintTimer = false;
     else if (ScreenHandler.getCurrentScreen() == DGUSLCD_SCREEN_POPUP) {
       DEBUG_ECHOLNPAIR("User confirmation canceled");
 
-      //ScreenHandler.SetupConfirmAction(nullptr);
       ScreenHandler.setstatusmessagePGM(nullptr);
       ScreenHandler.PopToOldScreen();
     }

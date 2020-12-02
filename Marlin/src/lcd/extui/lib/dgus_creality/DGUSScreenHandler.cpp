@@ -55,8 +55,6 @@ uint16_t DGUSScreenHandler::ConfirmVP;
   static ExtUI::FileList filelist;
 #endif
 
-void (*DGUSScreenHandler::confirm_action_cb)() = nullptr;
-
 DGUSLCD_Screens DGUSScreenHandler::current_screen;
 DGUSLCD_Screens DGUSScreenHandler::past_screens[NUM_PAST_SCREENS] = {DGUSLCD_SCREEN_MAIN};
 uint8_t DGUSScreenHandler::update_ptr;
@@ -99,7 +97,6 @@ void DGUSScreenHandler::HandleUserConfirmationPopUp(uint16_t VP, const char* lin
   }
 
   ConfirmVP = VP;
-  ScreenHandler.SetupConfirmAction(nullptr);
   sendinfoscreen(line1, line2, line3, line4, l1, l2, l3, l4);
   ScreenHandler.GotoScreen(DGUSLCD_SCREEN_CONFIRM);
 }
@@ -415,7 +412,6 @@ void DGUSScreenHandler::DGUSLCD_SendHeaterStatusToDisplay(DGUS_VP_Variable &var)
   void DGUSScreenHandler::SDCardError() {
     DGUSScreenHandler::SDCardRemoved();
     ScreenHandler.sendinfoscreen(PSTR("NOTICE"), nullptr, PSTR("SD card error"), nullptr, true, true, true, true);
-    ScreenHandler.SetupConfirmAction(nullptr);
     ScreenHandler.GotoScreen(DGUSLCD_SCREEN_POPUP);
   }
 
@@ -443,19 +439,21 @@ void DGUSScreenHandler::Buzzer(const uint16_t frequency, const uint16_t duration
 #endif
 
 bool DGUSScreenHandler::HandlePendingUserConfirmation() {
-  if (!ScreenHandler.confirm_action_cb) {
+  if (!ExtUI::isWaitingOnUser()) {
     return false;
   }
 
+  // Switch to the resume screen
   ScreenHandler.GotoScreen(DGUSLCD_SCREEN_PRINT_RUNNING);
   while (!ScreenHandler.loop());  // Wait while anything is left to be sent
 
-  // We might be re-entrant here
-  auto confirmAction = ScreenHandler.confirm_action_cb;
-  ScreenHandler.confirm_action_cb = nullptr;
-  confirmAction();
+  // Give DWIN a chance to catch up
+  delay(250);
 
-  return false;
+  // We might be re-entrant here
+  ExtUI::setUserConfirmed();
+
+  return true;
 }
 
 void DGUSScreenHandler::OnHomingStart() {
@@ -549,9 +547,9 @@ void DGUSScreenHandler::ScreenChangeHook(DGUS_VP_Variable &var, void *val_ptr) {
   DEBUG_ECHOLNPAIR("Current screen:", current_screen);
   DEBUG_ECHOLNPAIR("Cancel target:", target);
 
-  if (confirm_action_cb && current_screen == DGUSLCD_SCREEN_POPUP) {
+  if (ExtUI::isWaitingOnUser() && current_screen == DGUSLCD_SCREEN_POPUP) {
     DEBUG_ECHOLN("Executing confirmation action");
-    confirm_action_cb();
+    ExtUI::setUserConfirmed();
     PopToOldScreen();
     return;
   }
