@@ -2,6 +2,8 @@
 
 **This branch is for the Creality CR-6 SE with stock v4.5.2 motherboard and the stock display.**
 
+_For other configurations for the Creality CR-6 printer (like BigTreeTech SKR board and optional BTT TFT v3.0 display - please check the [branches and development section](#development-and-compile-it-yourself) section below._
+
 ## Downloads
 
 Please find official releases in the [Releases section](https://github.com/CR6Community/Marlin/releases). Take the release which belongs to the particular touch screen firmware you are going to flash. Please read the release notes *carefully* - it contains all the instructions you need.
