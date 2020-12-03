@@ -243,8 +243,6 @@ public:
 
   static void updateCurrentScreen(DGUSLCD_Screens current);
 
-  static inline void SetupConfirmAction( void (*f)()) { confirm_action_cb = f; }
-
   static bool HandlePendingUserConfirmation();
 
   static float feed_amount;
@@ -267,8 +265,6 @@ private:
     static int16_t top_file;    ///< file on top of file chooser
     static int16_t file_to_print; ///< touched file to be confirmed
   #endif
-
-  static void (*confirm_action_cb)();
 };
 
 extern DGUSScreenHandler ScreenHandler;
