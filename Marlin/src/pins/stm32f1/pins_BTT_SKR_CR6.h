@@ -26,17 +26,29 @@
 //
 // EEPROM
 //
-/* I2C */
-#define IIC_EEPROM_SDA       PB7
-#define IIC_EEPROM_SCL       PB6
+#if NO_EEPROM_SELECTED
+  #define I2C_EEPROM
+  //#define SDCARD_EEPROM_EMULATION
+#endif
 
-#define I2C_EEPROM
-#define MARLIN_EEPROM_SIZE 0x1000                 // 4KB
-#define E2END                (MARLIN_EEPROM_SIZE - 1) // 2KB
+#if ENABLED(IIC_BL24CXX_EEPROM)
+  #define IIC_EEPROM_SDA       PB7
+  #define IIC_EEPROM_SCL       PB6
+
+  #define MARLIN_EEPROM_SIZE   0x1000                 // 4KB
+  #define E2END                (MARLIN_EEPROM_SIZE - 1) // 2KB
+#elif ENABLED(SDCARD_EEPROM_EMULATION)
+  #define MARLIN_EEPROM_SIZE   0x800  // 2Kb
+#endif
+
+
+//
+// Limit Switches
+//
 
 #define X_MIN_PIN          PC0
-// #define X_MAX_PIN          PA7
 #define Y_MIN_PIN          PC1
+#define Z_MIN_PIN          PC14
 
 //
 // Steppers
@@ -49,7 +61,6 @@
 #define Y_STEP_PIN          PB10
 #define Y_DIR_PIN           PB2
 
-//#define Z_ENABLE_PIN        PA0
 #define Z_ENABLE_PIN        PB1
 #define Z_STEP_PIN          PB0
 #define Z_DIR_PIN           PC5
@@ -58,13 +69,31 @@
 #define E0_STEP_PIN         PB3
 #define E0_DIR_PIN          PB4
 
-#ifdef BLTOUCH
-  #error "Not supported"
-#elif ENABLED(FIX_MOUNTED_PROBE)
-  #define Z_MIN_PIN        PC14
-  #define COM_PIN          PA1//PA1
-#else
-  #error "Not supported"
+
+/**
+ * TMC2209 stepper drivers
+ * Hardware serial communication ports.
+ */
+#if HAS_TMC220x
+
+  //
+  // TMC2208 mode
+  //
+  // #define TMC2208_STANDALONE
+
+  #define X_HARDWARE_SERIAL  MSerial4
+  #define Y_HARDWARE_SERIAL  MSerial4
+  #define Z_HARDWARE_SERIAL  MSerial4
+  #define E0_HARDWARE_SERIAL MSerial4
+
+  //
+  // TMC2208 Software serial
+  //
+  // #define HAVE_SW_SERIAL
+
+  // Reduce baud rate to improve software serial reliability
+  // #define TMC_BAUD_RATE 19200
+
 #endif
 
 //
@@ -122,29 +151,3 @@
 /* SD card detect */
 #define SD_DETECT_PIN      PC4
 #define NEOPIXEL_PIN       PA8     
-
-/**
- * TMC2209 stepper drivers
- * Hardware serial communication ports.
- */
-#if HAS_TMC220x
-
-  //
-  // TMC2208 mode
-  //
-  // #define TMC2208_STANDALONE
-
-  #define X_HARDWARE_SERIAL  MSerial4
-  #define Y_HARDWARE_SERIAL  MSerial4
-  #define Z_HARDWARE_SERIAL  MSerial4
-  #define E0_HARDWARE_SERIAL MSerial4
-
-  //
-  // TMC2208 Software serial
-  //
-  // #define HAVE_SW_SERIAL
-
-  // Reduce baud rate to improve software serial reliability
-  // #define TMC_BAUD_RATE 19200
-
-#endif
