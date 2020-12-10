@@ -403,6 +403,10 @@ void DGUSScreenHandler::DGUSLCD_SendHeaterStatusToDisplay(DGUS_VP_Variable &var)
   }
 
   void DGUSScreenHandler::SDCardRemoved() {
+    if (!IS_SD_PRINTING()) {
+      return;
+    }
+
     if (current_screen == DGUSLCD_SCREEN_SDFILELIST
         || (current_screen == DGUSLCD_SCREEN_CONFIRM && (ConfirmVP == VP_SD_AbortPrintConfirmed || ConfirmVP == VP_SD_FileSelectConfirm))
         || current_screen == DGUSLCD_SCREEN_SDPRINTMANIPULATION
