@@ -1,6 +1,6 @@
 # Community firmware for the Creality CR-6 3D printer
 
-**This branch is for the Creality CR-6 SE with stock v4.5.2 motherboard and the stock display.**
+**This branch is for the Creality CR-6 SE with Big Tree Tech SKR-CR-6 motherboard and the Big Tree Tech TFT v3.0**
 
 _For other configurations for the Creality CR-6 printer (like BigTreeTech SKR board and optional BTT TFT v3.0 display - please check the [branches and development section](#development-and-compile-it-yourself) section below._
 
