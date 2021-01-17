@@ -14,16 +14,27 @@ Ensure you take the right assets: the `firmware[suffix].bin`. You should not dow
 
 ### Development and compile-it-yourself
 
-There are several branches in this project for your convenience. You can directly build them if you have the Platform.io plugin installed in Visual Studio code:
+There are several example configurations available for convenience. You can find them in the [`config`](./config) directory. Copy the files from the rioght directory to the root of the repository and you can directly build them if you have the Platform.io plugin installed in Visual Studio code. You will need to set the Platform.io environment to the environment in the file `platformio-environment.txt`.
 
-- **[`extui`](https://github.com/CR6Community/Marlin/tree/extui)** - main source branch for CR-6 SE community firmware development; rewritten from scratch; paired with the [`extui`](https://github.com/CR6Community/CR-6-Touchscreen/tree/extui) branch of the CR-6 touch screen repository. This branch is used if you run the *stock* CR-6 mainboard (v4.5.2).
-- **[`extui-btt-skr-stock-tft`](https://github.com/CR6Community/Marlin/tree/extui-btt-skr-stock-tft)** - The same as `extui` but for the Big Tree Tech SKR-CR6 motherboard _and_ when you use the stock Creality CR-6 display
-- **[`extui-btt-skr-tft3`](https://github.com/CR6Community/Marlin/tree/extui-btt-skr-tft3)** - Up-to-date Marlin for the CR-6 with the Big Tree Tech SKR-CR6 motherboard _and_ when you use the Big Tree Tech TFT
+Examples for the following hardware configurations are currently available:
+
+- Creality stock TFT with:
+   - Creality v4.5.2 motherboard (CR-6 SE)
+   - Creality v4.5.3 motherboard (CR-6 SE and CR-6 MAX)
+   - BigTreeTech SKR CR-6 (CR-6 SE)
+- BigTreeTech SKR CR-6 with BigTreeTech TFT v3.0
 
 Legacy branches:
 
 - **[`creality-cr6-merge-attempt`](https://github.com/CR6Community/Marlin/tree/creality-cr6-merge-attempt)** - initial branch based on Creality v1.0.3.7 firmware source code release and upgraded until the community firmware 3 release. All new releases are released from the `extui` branch.
+
+Original source code tracking:
+
 - **[`cr6-creality-changes`](https://github.com/CR6Community/Marlin/tree/cr6-creality-changes)** - tracks the changes from the Creality source code dump against Marlin upstream. As of now we have the Creality v1.0.3.7 firmware on this branch, based on Marlin pre-2.0.
+
+    - **[`v1.0.3.7`](https://github.com/CR6Community/Marlin/tree/official-fw/v1.0.3.7)**
+    - **[`v1.0.4.1`](https://github.com/CR6Community/Marlin/tree/official-fw/v1.0.4.1)**
+
 - **[`cr6-btt-dump`](https://github.com/CR6Community/Marlin/tree/cr6-btt-dump) - tracks the changes from the [Big Tree Tech SKR board firmware](https://github.com/bigtreetech/BIGTREETECH-SKR-CR6/tree/master/firmware/BTT-SKR-CR6)** source code (which does not have any git history). It appears the for the moment BTT source code is based on the Creality v1.0.3.7 source code release.
 
 ## Purpose of this community firmware
@@ -82,7 +93,7 @@ The current core CR-6 Community firmware dev team consists of:
 
  - Sebastiaan Dammann [[@Sebazzz](https://github.com/Sebazzz)] - Netherlands &nbsp; ([Donate](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=B7XURY2X39GS6&item_name=CR-6+development&currency_code=EUR) | [Website](https://damsteen.nl))
  - Juan Rodriguez [[@Nushio](https://github.com/Nushio)] - Mexico
- - Romain [[@grobux](https://github.com/grobux)] - France
+ - Romain [[@grobux](https://github.com/grobux)] - France ([Donate](https://www.paypal.com/donate?hosted_button_id=CP2SAW4W9RBT4))
  - Nick Acker [[@nickacker](https://github.com/nickacker)] - USA
  - And more...
 

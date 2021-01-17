@@ -21,7 +21,7 @@
  */
 #pragma once
 
-#include "../ultralcd.h"
+#include "../marlinui.h"
 #include "../../libs/numtostr.h"
 #include "../../inc/MarlinConfig.h"
 
@@ -227,6 +227,10 @@ void _lcd_draw_homing();
   void _lcd_toggle_bed_leveling();
 #endif
 
+#if ENABLED(PROBE_TARE_MENU)
+  void _tare_probe();
+#endif
+
 #if ENABLED(BABYSTEPPING)
   #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
     void lcd_babystep_zoffset();
@@ -249,3 +253,8 @@ void _lcd_draw_homing();
 #if ENABLED(TOUCH_SCREEN_CALIBRATION)
   void touch_screen_calibration();
 #endif
+
+extern uint8_t screen_history_depth;
+inline void clear_menu_history() { screen_history_depth = 0; }
+
+#define STICKY_SCREEN(S) []{ ui.defer_status_screen(); ui.goto_screen(S); }

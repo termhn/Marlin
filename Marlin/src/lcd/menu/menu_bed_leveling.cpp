@@ -37,8 +37,10 @@
 #endif
 
 #if HAS_GRAPHICAL_TFT
-  #include "../tft/touch.h"
   #include "../tft/tft.h"
+  #if ENABLED(TOUCH_SCREEN)
+    #include "../tft/touch.h"
+  #endif
 #endif
 
 #if EITHER(PROBE_MANUALLY, MESH_BED_LEVELING)
@@ -167,7 +169,9 @@
     if (ui.should_draw()) {
       MenuItem_static::draw(1, GET_TEXT(MSG_LEVEL_BED_WAITING));
       // Color UI needs a control to detect a touch
-      TERN_(HAS_GRAPHICAL_TFT, touch.add_control(CLICK, 0, 0, TFT_WIDTH, TFT_HEIGHT));
+      #if BOTH(TOUCH_SCREEN, HAS_GRAPHICAL_TFT)
+        touch.add_control(CLICK, 0, 0, TFT_WIDTH, TFT_HEIGHT);
+      #endif
     }
     if (ui.use_click()) {
       manual_probe_index = 0;
@@ -233,7 +237,7 @@
  *    Save Settings       (Req: EEPROM_SETTINGS)
  */
 void menu_bed_leveling() {
-  const bool is_homed = all_axes_known(),
+  const bool is_homed = all_axes_trusted(),
              is_valid = leveling_is_valid();
 
   START_MENU();
@@ -262,6 +266,10 @@ void menu_bed_leveling() {
     bool show_state = planner.leveling_active;
     EDIT_ITEM(bool, MSG_BED_LEVELING, &show_state, _lcd_toggle_bed_leveling);
   }
+
+  #if ENABLED(PROBE_TARE_MENU)
+    ACTION_ITEM(MSG_TARE_PROBE, _tare_probe);
+  #endif
 
   // Z Fade Height
   #if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)

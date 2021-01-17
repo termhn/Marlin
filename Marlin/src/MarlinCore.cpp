@@ -45,7 +45,6 @@
 #include "core/utility.h"
 #include "module/motion.h"
 #include "module/planner.h"
-#include "module/probe.h"
 #include "module/endstops.h"
 #include "module/temperature.h"
 #include "module/settings.h"
@@ -60,8 +59,8 @@
 
 #include "sd/cardreader.h"
 
-#include "lcd/ultralcd.h"
-#if HAS_TOUCH_XPT2046
+#include "lcd/marlinui.h"
+#if HAS_TOUCH_BUTTONS
   #include "lcd/touch/touch_buttons.h"
 #endif
 
@@ -76,6 +75,14 @@
   #include "lcd/dwin/e3v2/dwin.h"
   #include "lcd/dwin/dwin_lcd.h"
   #include "lcd/dwin/e3v2/rotary_encoder.h"
+#endif
+
+#if ENABLED(EXTENSIBLE_UI)
+  #include "lcd/extui/ui_api.h"
+#endif
+
+#if HAS_ETHERNET
+  #include "feature/ethernet.h"
 #endif
 
 #if ENABLED(IIC_BL24CXX_EEPROM)
@@ -170,6 +177,10 @@
   #include "feature/pause.h"
 #endif
 
+#if ENABLED(GCODE_REPEAT_MARKERS)
+  #include "feature/repeat.h"
+#endif
+
 #if ENABLED(POWER_LOSS_RECOVERY)
   #include "feature/powerloss.h"
 #endif
@@ -182,11 +193,7 @@
   #include "feature/runout.h"
 #endif
 
-#if ENABLED(EXTENSIBLE_UI)
-  #include "lcd/extui/ui_api.h"
-#endif
-
-#if HAS_Z_SERVO_PROBE
+#if EITHER(PROBE_TARE, HAS_Z_SERVO_PROBE)
   #include "module/probe.h"
 #endif
 
@@ -214,8 +221,8 @@
   #include "feature/controllerfan.h"
 #endif
 
-#if ENABLED(PRUSA_MMU2)
-  #include "feature/mmu2/mmu2.h"
+#if HAS_PRUSA_MMU2
+  #include "feature/mmu/mmu2.h"
 #endif
 
 #if HAS_L64XX
@@ -249,7 +256,7 @@ bool wait_for_heatup = true;
   bool wait_for_user; // = false;
 
   void wait_for_user_response(millis_t ms/*=0*/, const bool no_sleep/*=false*/) {
-    TERN(ADVANCED_PAUSE_FEATURE,,UNUSED(no_sleep));
+    UNUSED(no_sleep);
     KEEPALIVE_STATE(PAUSED_FOR_USER);
     wait_for_user = true;
     if (ms) ms += millis(); // expire time
@@ -440,6 +447,7 @@ bool printingIsPaused() {
 
 void startOrResumeJob() {
   if (!printingIsPaused()) {
+    TERN_(GCODE_REPEAT_MARKERS, repeat.reset());
     TERN_(CANCEL_OBJECTS, cancelable.reset());
     TERN_(LCD_SHOW_E_TOTAL, e_move_accumulator = 0);
     #if BOTH(LCD_SET_PROGRESS_MANUALLY, USE_M73_REMAINING_TIME)
@@ -452,6 +460,7 @@ void startOrResumeJob() {
 #if ENABLED(SDSUPPORT)
 
   inline void abortSDPrinting() {
+    IF_DISABLED(NO_SD_AUTOSTART, card.autofile_cancel());
     card.endFilePrint(TERN_(SD_RESORT, true));
     queue.clear();
     quickstop_stepper();
@@ -511,11 +520,10 @@ inline void manage_inactivity(const bool ignore_stepper_queue=false) {
   if (gcode.stepper_max_timed_out(ms)) {
     SERIAL_ERROR_START();
     SERIAL_ECHOLNPAIR(STR_KILL_INACTIVE_TIME, parser.command_ptr);
-
     kill();
   }
 
-  // M18 / M94 : Handle steppers inactive time timeout
+  // M18 / M84 : Handle steppers inactive time timeout
   if (gcode.stepper_inactive_time) {
 
     static bool already_shutdown_steppers; // = false
@@ -578,7 +586,7 @@ inline void manage_inactivity(const bool ignore_stepper_queue=false) {
       if (ELAPSED(ms, next_home_key_ms)) {
         next_home_key_ms = ms + HOME_DEBOUNCE_DELAY;
         LCD_MESSAGEPGM(MSG_AUTO_HOME);
-        queue.enqueue_now_P(G28_STR);
+        queue.inject_P(G28_STR);
       }
     }
   #endif
@@ -647,11 +655,12 @@ inline void manage_inactivity(const bool ignore_stepper_queue=false) {
 
   #if ENABLED(DUAL_X_CARRIAGE)
     // handle delayed move timeout
-    if (delayed_move_time && ELAPSED(ms, delayed_move_time + 1000UL) && IsRunning()) {
+    if (delayed_move_time && ELAPSED(ms, delayed_move_time) && IsRunning()) {
       // travel moves have been received so enact them
       delayed_move_time = 0xFFFFFFFFUL; // force moves to be done
       destination = current_position;
       prepare_line_to_destination();
+      planner.synchronize();
     }
   #endif
 
@@ -702,6 +711,10 @@ inline void manage_inactivity(const bool ignore_stepper_queue=false) {
  *  - Handle Joystick jogging
  */
 void idle(TERN_(ADVANCED_PAUSE_FEATURE, bool no_stepper_sleep/*=false*/)) {
+  #if ENABLED(MARLIN_DEV_MODE)
+    static uint8_t idle_depth = 0;
+    if (++idle_depth > 5) SERIAL_ECHOLNPAIR("idle() call depth: ", int(idle_depth));
+  #endif
 
   // Core Marlin activities
   manage_inactivity(TERN_(ADVANCED_PAUSE_FEATURE, no_stepper_sleep));
@@ -713,15 +726,16 @@ void idle(TERN_(ADVANCED_PAUSE_FEATURE, bool no_stepper_sleep/*=false*/)) {
   TERN_(MAX7219_DEBUG, max7219.idle_tasks());
 
   // Return if setup() isn't completed
-  if (marlin_state == MF_INITIALIZING) return;
+  if (marlin_state == MF_INITIALIZING) goto IDLE_DONE;
 
   // Handle filament runout sensors
   TERN_(HAS_FILAMENT_SENSOR, runout.run());
 
   // Run HAL idle tasks
-  #ifdef HAL_IDLETASK
-    HAL_idletask();
-  #endif
+  TERN_(HAL_IDLETASK, HAL_idletask());
+
+  // Check network connection
+  TERN_(HAS_ETHERNET, ethernet.check());
 
   // Handle Power-Loss Recovery
   #if ENABLED(POWER_LOSS_RECOVERY) && PIN_EXISTS(POWER_LOSS)
@@ -754,39 +768,9 @@ void idle(TERN_(ADVANCED_PAUSE_FEATURE, bool no_stepper_sleep/*=false*/)) {
   // Handle UI input / draw events
   TERN(DWIN_CREALITY_LCD, DWIN_Update(), ui.update());
 
-  #if PIN_EXISTS(OPTO_SWITCH)
-    static bool optoSwitch = true;
-    static bool probeTared = false;
-    if (optoSwitch != READ(OPTO_SWITCH_PIN)) {
-      optoSwitch = READ(OPTO_SWITCH_PIN);
-      SERIAL_ECHOLNPAIR("Opto switch says: ", optoSwitch);
-    }
-
-    bool is_in_probing_zone = !optoSwitch;   
-    if (!is_in_probing_zone && probeTared) {
-      SERIAL_ECHOLN("FIX_MOUNTED_PROBE: Preparing for next probe tare");
-      probeTared = false;
-    }
-
-    #if ENABLED(FIX_MOUNTED_PROBE)
-      if (is_in_probing_zone && is_homing_z && !probeTared) {
-          SERIAL_ECHOLN("FIX_MOUNTED_PROBE: Taring probe");
-          WRITE(COM_PIN, LOW);
-          delay(100);
-          WRITE(COM_PIN, HIGH);
-          delay(200);
-
-          probeTared = true;
-      }
-    #endif
-
-    if (is_homing_z) {
-      endstops.enable_z_probe(is_in_probing_zone);
-    }
-  #endif
-
   // Run i2c Position Encoders
   #if ENABLED(I2C_POSITION_ENCODERS)
+  {
     static millis_t i2cpem_next_update_ms;
     if (planner.has_blocks_queued()) {
       const millis_t ms = millis();
@@ -795,6 +779,7 @@ void idle(TERN_(ADVANCED_PAUSE_FEATURE, bool no_stepper_sleep/*=false*/)) {
         i2cpem_next_update_ms = ms + I2CPE_MIN_UPD_TIME_MS;
       }
     }
+  }
   #endif
 
   // Auto-report Temperatures / SD Status
@@ -806,7 +791,7 @@ void idle(TERN_(ADVANCED_PAUSE_FEATURE, bool no_stepper_sleep/*=false*/)) {
   #endif
 
   // Update the Průša MMU2
-  TERN_(PRUSA_MMU2, mmu2.mmu_loop());
+  TERN_(HAS_PRUSA_MMU2, mmu2.mmu_loop());
 
   // Handle Joystick jogging
   TERN_(POLL_JOG, joystick.inject_jog_moves());
@@ -814,9 +799,12 @@ void idle(TERN_(ADVANCED_PAUSE_FEATURE, bool no_stepper_sleep/*=false*/)) {
   // Direct Stepping
   TERN_(DIRECT_STEPPING, page_manager.write_responses());
 
-  #if HAS_TFT_LVGL_UI
-    LV_TASK_HANDLER();
-  #endif
+  // Update the LVGL interface
+  TERN_(HAS_TFT_LVGL_UI, LV_TASK_HANDLER());
+
+  IDLE_DONE:
+  TERN_(MARLIN_DEV_MODE, idle_depth--);
+  return;
 }
 
 /**
@@ -1007,16 +995,17 @@ void setup() {
   #endif
 
   MYSERIAL0.begin(BAUDRATE);
-  uint32_t serial_connect_timeout = millis() + 1000UL;
+  millis_t serial_connect_timeout = millis() + 1000UL;
   while (!MYSERIAL0 && PENDING(millis(), serial_connect_timeout)) { /*nada*/ }
-  #if HAS_MULTI_SERIAL
+
+  #if HAS_MULTI_SERIAL && !HAS_ETHERNET
     MYSERIAL1.begin(BAUDRATE);
     serial_connect_timeout = millis() + 1000UL;
     while (!MYSERIAL1 && PENDING(millis(), serial_connect_timeout)) { /*nada*/ }
   #endif
-  SERIAL_ECHO_MSG("start");
+  SERIAL_ECHOLNPGM("start");
 
-  #if BOTH(HAS_TFT_LVGL_UI, USE_WIFI_FUNCTION)
+  #if BOTH(HAS_TFT_LVGL_UI, MKS_WIFI_MODULE)
     mks_esp_wifi_init();
     WIFISERIAL.begin(WIFI_BAUDRATE);
     serial_connect_timeout = millis() + 1000UL;
@@ -1024,6 +1013,14 @@ void setup() {
   #endif
 
   SETUP_RUN(HAL_init());
+
+  // Init and disable SPI thermocouples
+  #if HEATER_0_USES_MAX6675
+    OUT_WRITE(MAX6675_SS_PIN, HIGH);  // Disable
+  #endif
+  #if HEATER_1_USES_MAX6675
+    OUT_WRITE(MAX6675_SS2_PIN, HIGH); // Disable
+  #endif
 
   #if HAS_L64XX
     SETUP_RUN(L64xxManager.init());  // Set up SPI, init drivers
@@ -1124,14 +1121,8 @@ void setup() {
     SETUP_RUN(ui.reset_status());     // Load welcome message early. (Retained if no errors exist.)
   #endif
 
-  #if PIN_EXISTS(COM)
-    SERIAL_ECHOLN("Init COM_PIN");
-    OUT_WRITE(COM_PIN, HIGH);
-  #endif
-
-  #if PIN_EXISTS(OPTO_SWITCH)
-    SETUP_LOG("Init OPTO_SWITCH_PIN");
-    SET_INPUT(OPTO_SWITCH_PIN);
+  #if ENABLED(PROBE_TARE)
+    SETUP_RUN(probe.tare_init());
   #endif
 
   #if BOTH(SDSUPPORT, SDCARD_EEPROM_EMULATION)
@@ -1141,7 +1132,11 @@ void setup() {
   SETUP_RUN(settings.first_load());   // Load data from EEPROM if available (or use defaults)
                                       // This also updates variables in the planner, elsewhere
 
-  #if HAS_TOUCH_XPT2046
+  #if HAS_ETHERNET
+    SETUP_RUN(ethernet.init());
+  #endif
+
+  #if HAS_TOUCH_BUTTONS
     SETUP_RUN(touch.init());
   #endif
 
@@ -1219,8 +1214,8 @@ void setup() {
     SETUP_RUN(caselight.update_brightness());
   #endif
 
-  #if ENABLED(MK2_MULTIPLEXER)
-    SETUP_LOG("MK2_MULTIPLEXER");
+  #if HAS_PRUSA_MMU1
+    SETUP_LOG("Prusa MMU1");
     SET_OUTPUT(E_MUX0_PIN);
     SET_OUTPUT(E_MUX1_PIN);
     SET_OUTPUT(E_MUX2_PIN);
@@ -1300,7 +1295,7 @@ void setup() {
     SETUP_RUN(test_tmc_connection(true, true, true, true));
   #endif
 
-  #if ENABLED(PRUSA_MMU2)
+  #if HAS_PRUSA_MMU2
     SETUP_RUN(mmu2.init());
   #endif
 
@@ -1309,7 +1304,6 @@ void setup() {
     const uint8_t err = BL24CXX::check();
     SERIAL_ECHO_TERNARY(err, "BL24CXX Check ", "failed", "succeeded", "!\n");
   #endif
-
 
   #if ENABLED(DWIN_CREALITY_LCD)
     Encoder_Configuration();
@@ -1340,6 +1334,10 @@ void setup() {
     SETUP_RUN(password.lock_machine());      // Will not proceed until correct password provided
   #endif
 
+  #if BOTH(HAS_LCD_MENU, TOUCH_SCREEN_CALIBRATION) && EITHER(TFT_CLASSIC_UI, TFT_COLOR_UI)
+    ui.check_touch_calibration();
+  #endif
+
   marlin_state = MF_RUNNING;
 
   SETUP_LOG("setup() completed.");
@@ -1363,7 +1361,6 @@ void loop() {
     idle();
 
     #if ENABLED(SDSUPPORT)
-      card.checkautostart();
       if (card.flag.abort_sd_printing) abortSDPrinting();
       if (marlin_state == MF_SD_COMPLETE) finishSDPrinting();
     #endif

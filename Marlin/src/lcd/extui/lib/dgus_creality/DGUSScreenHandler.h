@@ -28,11 +28,33 @@
 
 enum DGUSLCD_Screens : uint8_t;
 
+struct creality_dwin_settings_t {
+  size_t settings_size;
+  bool led_state;
+  bool display_standby;
+  bool display_sound;
+  int16_t standby_screen_brightness;
+};
+
+// endianness swap
+inline uint16_t swap16(const uint16_t value) { return (value & 0xffU) << 8U | (value >> 8U); }
+
 class DGUSScreenHandler {
 public:
   DGUSScreenHandler() = default;
 
   static bool loop();
+
+  static void Init();
+  static void DefaultSettings();
+  static void LoadSettings(const char* buff);
+  static void StoreSettings(char* buff);
+  static void SetTouchScreenConfiguration();
+  static void KillScreenCalled();
+
+  static void OnPowerlossResume();
+
+  static void RequestSaveSettings();
 
   /// Send all 4 strings that are displayed on the infoscreen, confirmation screen and kill screen
   /// The bools specifing whether the strings are in RAM or FLASH.
@@ -52,6 +74,7 @@ public:
   static void HandleAllHeatersOff(DGUS_VP_Variable &var, void *val_ptr);
   // Hook for "Change this temperature"
   static void HandleTemperatureChanged(DGUS_VP_Variable &var, void *val_ptr);
+  static void HandleFanSpeedChanged(DGUS_VP_Variable &var, void *val_ptr);
   // Hook for "Change Flowrate"
   static void HandleFlowRateChanged(DGUS_VP_Variable &var, void *val_ptr);
   // Hook for manual extrude.
@@ -66,11 +89,14 @@ public:
   static void HandleSettings(DGUS_VP_Variable &var, void *val_ptr);
   static void HandleStepPerMMChanged(DGUS_VP_Variable &var, void *val_ptr);
   static void HandleStepPerMMExtruderChanged(DGUS_VP_Variable &var, void *val_ptr);
-
   static void HandleFeedAmountChanged(DGUS_VP_Variable &var, void *val_ptr);
 
   // Hook for move to position
   static void HandlePositionChange(DGUS_VP_Variable &var, void *val_ptr);
+
+  static void HandleToggleTouchScreenMute(DGUS_VP_Variable &var, void *val_ptr);
+  static void HandleToggleTouchScreenStandbySetting(DGUS_VP_Variable &var, void *val_ptr);
+  static void HandleTouchScreenStandbyBrightnessSetting(DGUS_VP_Variable &var, void *val_ptr);
 
   #if HAS_PID_HEATING
     // Hook for "Change this temperature PID para"
@@ -86,10 +112,10 @@ public:
 
     static void OnMeshLevelingUpdate(const int8_t xpos, const int8_t ypos);
   #endif
-  #if ENABLED(BABYSTEPPING)
-    // Hook for live z adjust action
-    static void HandleLiveAdjustZ(DGUS_VP_Variable &var, void *val_ptr);
-  #endif
+
+  // Hook for live z adjust action
+  static void HandleLiveAdjustZ(DGUS_VP_Variable &var, void *val_ptr);
+
   // Hook for heater control
   static void HandleHeaterControl(DGUS_VP_Variable &var, void *val_ptr);
   #if ENABLED(DGUS_PREHEAT_UI)
@@ -134,8 +160,6 @@ public:
 
   static void HandleFanToggle();
 
-  static void HandleStepperState(bool is_enabled);
-
   static void FilamentRunout();
 
   static void OnFactoryReset();
@@ -158,6 +182,7 @@ public:
 
   // Recall the remembered screen.
   static void PopToOldScreen();
+  static void OnBackButton(DGUS_VP_Variable &var, void *val_ptr);
 
   // Make the display show the screen and update all VPs in it.
   static void GotoScreen(DGUSLCD_Screens screen, bool save_current_screen = true);
@@ -178,12 +203,14 @@ public:
   #endif
   #if HAS_FAN
     static void DGUSLCD_SendFanStatusToDisplay(DGUS_VP_Variable &var);
+    static void DGUSLCD_SendFanSpeedToDisplay(DGUS_VP_Variable &var);
   #endif
   static void DGUSLCD_SendHeaterStatusToDisplay(DGUS_VP_Variable &var);
   #if ENABLED(DGUS_UI_WAITING)
     static void DGUSLCD_SendWaitingStatusToDisplay(DGUS_VP_Variable &var);
   #endif
 
+  static void DGUSLCD_SendAboutFirmwareWebsite(DGUS_VP_Variable &var);
   static void DGUSLCD_SendAboutFirmwareVersion(DGUS_VP_Variable &var);
   static void DGUSLCD_SendAboutPrintSize(DGUS_VP_Variable &var);
 
@@ -199,6 +226,17 @@ public:
     *(T*)var.memadr = x.t;
   }
 
+  template<DGUSLCD_Screens TPage>
+  static void DGUSLCD_NavigateToPage(DGUS_VP_Variable &var, void *val_ptr) {
+    GotoScreen(TPage);
+  }
+
+  template<DGUSLCD_Screens TPage, typename Handler>
+  static void DGUSLCD_NavigateToPage(DGUS_VP_Variable &var, void *val_ptr) {
+    GotoScreen(TPage);
+    Handler::Init();
+  }
+
   /// Send a float value to the display.
   /// Display will get a 4-byte integer scaled to the number of digits:
   /// Tell the display the number of digits and it cheats by displaying a dot between...
@@ -207,7 +245,28 @@ public:
     if (var.memadr) {
       float f = *(float *)var.memadr;
       f *= cpow(10, decimals);
-      dgusdisplay.WriteVariable(var.VP, (long)f);
+
+      // Round - truncated values look like skipped numbers
+      long roundedValue = static_cast<long>(round(f));
+      dgusdisplay.WriteVariable(var.VP, roundedValue);
+    }
+  }
+
+  // Receive a float from the display - Display will send a 2-byte integer scaled to the number of digits
+  template<unsigned int decimals>
+  static void DGUSLCD_SetFloatAsIntFromDisplay(DGUS_VP_Variable &var, void *val_ptr) {
+    if (var.memadr) {
+      uint16_t value_raw = swap16(*(uint16_t*)val_ptr);
+      float value = (float)value_raw/10;
+      *(float *)var.memadr = value;
+    }
+  }
+
+  // Toggle a boolean at the specified memory address
+  static void DGUSLCD_ToggleBoolean(DGUS_VP_Variable &var, void *val_ptr) {
+    if (var.memadr) {
+      bool* val = (bool *)var.memadr;
+      *val = !*val;
     }
   }
 
@@ -228,11 +287,25 @@ public:
   static void DGUSLCD_SendFloatAsIntValueToDisplay(DGUS_VP_Variable &var) {
     if (var.memadr) {
       float f = *(float *)var.memadr;
-      DEBUG_ECHOLNPAIR_F(" >> ", f, 6);
       f *= cpow(10, decimals);
-      dgusdisplay.WriteVariable(var.VP, (int16_t)f);
+
+      // Round - truncated values look like skipped numbers
+      int16_t roundedValue = static_cast<int16_t>(round(f));
+      dgusdisplay.WriteVariable(var.VP, roundedValue);
     }
   }
+
+  template<AxisEnum Axis>
+  static void SendAxisTrustValue(DGUS_VP_Variable &var) {
+    bool trust = axis_is_trusted(Axis);
+
+    uint16_t color = trust ? 0xFFFF /*White*/ : 0XF800 /*Red*/;
+    dgusdisplay.SetVariableDisplayColor(var.VP, color);
+
+    //PGM_P suffix = trust ? nullptr : "???";
+    //dgusdisplay.SetVariableAppendText(var.VP, suffix);
+  }
+
 
   /// Force an update of all VP on the current screen.
   static inline void ForceCompleteUpdate() { update_ptr = 0; ScreenComplete = false; }
@@ -241,12 +314,10 @@ public:
 
   static inline DGUSLCD_Screens getCurrentScreen() { return current_screen; }
 
-  static void updateCurrentScreen(DGUSLCD_Screens current);
-
   static bool HandlePendingUserConfirmation();
 
   static float feed_amount;
-  static bool are_steppers_enabled;
+  static bool fwretract_available;
 
 private:
   static DGUSLCD_Screens current_screen;  ///< currently on screen
@@ -260,11 +331,15 @@ private:
   static uint16_t ConfirmVP;    ///< context for confirm screen (VP that will be emulated-sent on "OK").
 
   static uint8_t MeshLevelIndex;
+  static bool SaveSettingsRequested;
 
   #if ENABLED(SDSUPPORT)
     static int16_t top_file;    ///< file on top of file chooser
     static int16_t file_to_print; ///< touched file to be confirmed
   #endif
+
+public: // Needed for VP auto-upload
+  static creality_dwin_settings_t Settings;
 };
 
 extern DGUSScreenHandler ScreenHandler;
