@@ -288,6 +288,7 @@ const uint16_t VPList_TuneScreen[] PROGMEM = {
     VP_T_Bed_Is, VP_T_Bed_Set,// VP_BED_STATUS,
   #endif
   VP_Z_OFFSET,
+  //VP_Fan0_Percentage,
   VP_Feedrate_Percentage,
 
   VP_LED_TOGGLE,
@@ -589,9 +590,15 @@ const struct DGUS_VP_Variable ListOfVP[] PROGMEM = {
   VPHELPER(VP_FWRETRACT_RESTART_LENGTH, &fwretract.settings.retract_recover_extra, ScreenHandler.DGUSLCD_SetFloatAsIntFromDisplay<1>, ScreenHandler.DGUSLCD_SendFloatAsIntValueToDisplay<1>),
   VPHELPER(VP_FWRETRACT_RESTART_FEEDRATE, &fwretract.settings.retract_recover_feedrate_mm_s, ScreenHandler.DGUSLCD_SetFloatAsIntFromDisplay<1>, ScreenHandler.DGUSLCD_SendFloatAsIntValueToDisplay<1>),
 
-  VPHELPER(VP_FWRETRACT_INDICATOR_ICON, &fwretract.autoretract_enabled, nullptr, (ScreenHandler.DGUSLCD_SendIconValue<ICON_FWRETRACT_AUTO_ENGAGED, ICON_FWRETRACT_AUTO_DISENGAGED>)),
-  VPHELPER(VP_FWRETRACT_TOGGLE_BUTTON_ICON, &fwretract.autoretract_enabled, nullptr, (ScreenHandler.DGUSLCD_SendIconValue<ICON_FWRETRACT_AUTO_TOGGLE_ON, ICON_FWRETRACT_AUTO_TOGGLE_OFF>)),
-  VPHELPER(VP_FWRETRACT_TOGGLE_BUTTON, &fwretract.autoretract_enabled, ScreenHandler.DGUSLCD_ToggleBoolean, nullptr),
+  #if ENABLED(FWRETRACT_AUTORETRACT)
+    VPHELPER(VP_FWRETRACT_INDICATOR_ICON, &fwretract.autoretract_enabled, nullptr, (ScreenHandler.DGUSLCD_SendIconValue<ICON_FWRETRACT_AUTO_ENGAGED, ICON_FWRETRACT_AUTO_DISENGAGED>)),
+    VPHELPER(VP_FWRETRACT_TOGGLE_BUTTON_ICON, &fwretract.autoretract_enabled, nullptr, (ScreenHandler.DGUSLCD_SendIconValue<ICON_FWRETRACT_AUTO_TOGGLE_ON, ICON_FWRETRACT_AUTO_TOGGLE_OFF>)),
+    VPHELPER(VP_FWRETRACT_TOGGLE_BUTTON, &fwretract.autoretract_enabled, ScreenHandler.DGUSLCD_ToggleBoolean, nullptr),
+  #else
+    VPHELPER(VP_FWRETRACT_INDICATOR_ICON, nullptr, nullptr, (ScreenHandler.DGUSLCD_SendIconValue<ICON_FWRETRACT_AUTO_ENGAGED, ICON_FWRETRACT_AUTO_DISENGAGED>)),
+    VPHELPER(VP_FWRETRACT_TOGGLE_BUTTON_ICON, nullptr, nullptr, (ScreenHandler.DGUSLCD_SendIconValue<ICON_FWRETRACT_AUTO_TOGGLE_ON, ICON_FWRETRACT_AUTO_TOGGLE_OFF>)),
+    VPHELPER(VP_FWRETRACT_TOGGLE_BUTTON, nullptr, ScreenHandler.DGUSLCD_ToggleBoolean, nullptr),
+  #endif
 #endif
 
   // ... Sending after init does not always work
@@ -616,7 +623,7 @@ const struct DGUS_VP_Variable ListOfVP[] PROGMEM = {
   { .VP = VP_MSGSTR1, .memadr = nullptr, .size = VP_MSGSTR1_LEN, .set_by_display_handler = nullptr, .send_to_display_handler = &ScreenHandler.DGUSLCD_SendStringToDisplayPGM },
   { .VP = VP_MSGSTR2, .memadr = nullptr, .size = VP_MSGSTR2_LEN, .set_by_display_handler = nullptr, .send_to_display_handler = &ScreenHandler.DGUSLCD_SendStringToDisplayPGM },
   { .VP = VP_MSGSTR3, .memadr = nullptr, .size = VP_MSGSTR3_LEN, .set_by_display_handler = nullptr, .send_to_display_handler = &ScreenHandler.DGUSLCD_SendStringToDisplayPGM },
-  //{ .VP = VP_MSGSTR4, .memadr = nullptr, .size = VP_MSGSTR4_LEN, .set_by_display_handler = nullptr, .send_to_display_handler = &ScreenHandler.DGUSLCD_SendStringToDisplayPGM },
+  { .VP = VP_MSGSTR4, .memadr = nullptr, .size = VP_MSGSTR4_LEN, .set_by_display_handler = nullptr, .send_to_display_handler = &ScreenHandler.DGUSLCD_SendStringToDisplayPGM },
 
   VPHELPER(0, 0, 0, 0)  // must be last entry.
 };

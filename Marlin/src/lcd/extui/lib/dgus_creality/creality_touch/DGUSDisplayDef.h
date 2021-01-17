@@ -211,7 +211,7 @@ constexpr uint16_t VP_PREHEAT_ABS_BED_TEMP = 0x110a;
 
 // // Place for status messages.
 constexpr uint16_t VP_M117 = 0x21B3;
-constexpr uint8_t VP_M117_LEN = 70;
+constexpr uint8_t VP_M117_LEN = 40;
 
 // // Temperatures.
 constexpr uint16_t VP_T_E0_Is = 0x1036;  // 4 Byte Integer - HEAD_CURRENT_TEMP_VP
@@ -353,6 +353,7 @@ constexpr uint16_t VP_FAN_TOGGLE = 0x101E;
 constexpr uint16_t VP_LED_TOGGLE = 0x101F;
 constexpr uint16_t VP_MESH_LEVEL_TEMP = 0x108A;
 constexpr uint16_t VP_MESH_LEVEL_STATUS = 0x108D;
+constexpr uint16_t VP_MESH_VALUE_START = 0x1300;
 constexpr uint16_t VP_FEED_AMOUNT = 0x1054;
 constexpr uint16_t VP_FEED_PROGRESS = 0x108e;
 

@@ -943,8 +943,11 @@ namespace ExtUI {
     feedrate_percentage = constrain(value, 10, 500);
   }
 
+  bool awaitingUserConfirm() {
+    return wait_for_user;
+  }
+
   void setUserConfirmed() {
-    SERIAL_ECHOLN("User has confirmed");
     TERN_(HAS_RESUME_CONTINUE, wait_for_user = false);
   }
 

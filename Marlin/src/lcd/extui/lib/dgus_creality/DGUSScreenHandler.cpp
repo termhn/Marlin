@@ -67,16 +67,6 @@ uint8_t DGUSScreenHandler::MeshLevelIndex = -1;
 float DGUSScreenHandler::feed_amount = 100;
 bool DGUSScreenHandler::fwretract_available = TERN(FWRETRACT,  true, false);
 
-// Hardcoded limits
-constexpr uint8_t DGUS_GRID_VISUALIZATION_START_ID = GRID_MAX_POINTS > (4*4) ? 30 : 1;
-
-static_assert(
-  (GRID_MAX_POINTS == 16 && DGUS_GRID_VISUALIZATION_START_ID == 1)||  // CR-6 SE
-  (GRID_MAX_POINTS == 49 && DGUS_GRID_VISUALIZATION_START_ID == 30) || // CR-6 MAX
-  (GRID_MAX_POINTS != 16 && GRID_MAX_POINTS != 49),                    // Custom Leveling
-  "Incorrect offset selected for leveling config"
-);
-
 void DGUSScreenHandler::sendinfoscreen(const char* line1, const char* line2, const char* line3, const char* line4, bool l1inflash, bool l2inflash, bool l3inflash, bool l4inflash) {
   DGUS_VP_Variable ramcopy;
   if (populate_VPVar(VP_MSGSTR1, &ramcopy)) {
@@ -91,10 +81,10 @@ void DGUSScreenHandler::sendinfoscreen(const char* line1, const char* line2, con
     ramcopy.memadr = (void*) line3;
     l3inflash ? DGUSScreenHandler::DGUSLCD_SendStringToDisplayPGM(ramcopy) : DGUSScreenHandler::DGUSLCD_SendStringToDisplay(ramcopy);
   }
-  //if (populate_VPVar(VP_MSGSTR4, &ramcopy)) {
-  //  ramcopy.memadr = (void*) line4;
-  //  l4inflash ? DGUSScreenHandler::DGUSLCD_SendStringToDisplayPGM(ramcopy) : DGUSScreenHandler::DGUSLCD_SendStringToDisplay(ramcopy);
-  //}
+  if (populate_VPVar(VP_MSGSTR4, &ramcopy)) {
+    ramcopy.memadr = (void*) line4;
+    l4inflash ? DGUSScreenHandler::DGUSLCD_SendStringToDisplayPGM(ramcopy) : DGUSScreenHandler::DGUSLCD_SendStringToDisplay(ramcopy);
+  }
 }
 
 
@@ -531,7 +521,7 @@ void DGUSScreenHandler::OnFactoryReset() {
   ScreenHandler.GotoScreen(DGUSLCD_SCREEN_MAIN);
 }
 
-#if HAS_BUZZER
+#if HAS_BUZZER || ENABLED(SPEAKER)
 void DGUSScreenHandler::Buzzer(const uint16_t frequency, const uint16_t duration) {
   // Frequency is fixed - duration is not but in 8 ms steps
   const uint8_t durationUnits = static_cast<uint8_t>(duration / 8);
@@ -585,33 +575,52 @@ void DGUSScreenHandler::OnMeshLevelingStart() {
 
   MeshLevelIndex = 0;
 
-  dgusdisplay.WriteVariable(VP_MESH_LEVEL_STATUS, static_cast<uint16_t>(DGUS_GRID_VISUALIZATION_START_ID));
+  dgusdisplay.WriteVariable(VP_MESH_LEVEL_STATUS, static_cast<uint16_t>(1));
 }
 
 void DGUSScreenHandler::OnMeshLevelingUpdate(const int8_t xpos, const int8_t ypos) {
-  if (MeshLevelIndex < 0) {
-    // We're not leveling
-    return;
-  }
-
   MeshLevelIndex++;
 
-  SERIAL_ECHOLNPAIR("Mesh level index: ", MeshLevelIndex);
+  DEBUG_ECHOLNPAIR("Mesh level index: ", MeshLevelIndex);
+  DEBUG_ECHOLNPAIR("Mesh X: ", xpos);
+  DEBUG_ECHOLNPAIR("Mesh Y: ", ypos);
+  xy_uint8_t pnt = {xpos, ypos};
+  DEBUG_ECHOLNPAIR("Mesh Val: ", ExtUI::getMeshPoint(pnt));
 
   // Update icon
-  dgusdisplay.WriteVariable(VP_MESH_LEVEL_STATUS, static_cast<uint16_t>(MeshLevelIndex + DGUS_GRID_VISUALIZATION_START_ID));
+  dgusdisplay.WriteVariable(VP_MESH_LEVEL_STATUS, static_cast<uint16_t>(MeshLevelIndex));
+
+  uint8_t abl_probe_index = 0;
+  for(uint8_t outer = 0; outer < GRID_MAX_POINTS_Y; outer++)
+  {
+    for (uint8_t inner = 0; inner < GRID_MAX_POINTS_X; inner++)
+    {
+      uint8_t x_Point = inner;
+      bool zig = (outer & 1); // != ((PR_OUTER_END) & 1);
+      if (zig) x_Point = (GRID_MAX_POINTS_X - 1) - inner;
+      xy_uint8_t point = {x_Point, outer};
+      if(x_Point==xpos && outer ==ypos) {
+        DEBUG_ECHOLNPAIR("Mesh adr: ", (VP_MESH_VALUE_START + (abl_probe_index * 4)));
+        DEBUG_ECHOLNPAIR("Mesh Val: ", ExtUI::getMeshPoint(point));
+        ScreenHandler.DGUSLCD_SendFloatAsLongValueToDisplay<3>((VP_MESH_VALUE_START + (abl_probe_index * 4)), ExtUI::getMeshPoint(point));
+      }
+      ++abl_probe_index;
+    }
+  }
 
   if (MeshLevelIndex == GRID_MAX_POINTS) {
     // Done
-    MeshLevelIndex = -1;
 
-    RequestSaveSettings();
+    SERIAL_ECHOLN("Mesh Complete - Saving");
+    settings.save();
 
-    PopToOldScreen();
+    if(!ExtUI::isPrinting()) {
+      thermalManager.disable_all_heaters();
+      GotoScreen(DGUSLCD_SCREEN_ZOFFSET_LEVEL);
+    }
+    else
+      PopToOldScreen();
 
-    dgusdisplay.WriteVariable(VP_MESH_LEVEL_STATUS, static_cast<uint16_t>(DGUS_GRID_VISUALIZATION_START_ID));
-  } else {
-    // We've already updated the icon, so nothing left
   }
 }
 
@@ -713,7 +722,7 @@ void DGUSScreenHandler::HandleTemperatureChanged(DGUS_VP_Variable &var, void *va
 
 void DGUSScreenHandler::HandleFanSpeedChanged(DGUS_VP_Variable &var, void *val_ptr) {
   uint16_t newValue = swap16(*(uint16_t*)val_ptr);
-    
+
     SERIAL_ECHOLNPAIR("Fan speed changed: ", newValue);
     ExtUI::setTargetFan_percent(newValue, ExtUI::fan_t::FAN0);
 
@@ -723,7 +732,7 @@ void DGUSScreenHandler::HandleFanSpeedChanged(DGUS_VP_Variable &var, void *val_p
 void DGUSScreenHandler::HandleFlowRateChanged(DGUS_VP_Variable &var, void *val_ptr) {
   #if EXTRUDERS
     uint16_t newValue = swap16(*(uint16_t*)val_ptr);
-    
+
     SERIAL_ECHOLNPAIR("Flow rate changed: ", newValue);
     ExtUI::setFlow_percent(newValue, ExtUI::E0);
 
@@ -973,7 +982,7 @@ void DGUSScreenHandler::HandleLiveAdjustZ(DGUS_VP_Variable &var, void *val_ptr) 
   ExtUI::smartAdjustAxis_steps(steps, ExtUI::axis_t::Z, true);
 
   RequestSaveSettings();
-  
+
   ScreenHandler.ForceCompleteUpdate();
   ScreenHandler.skipVP = var.VP; // don't overwrite value the next update time as the display might autoincrement in parallel
   return;
@@ -1165,10 +1174,10 @@ void DGUSScreenHandler::HandleFanToggle() {
 }
 
 void DGUSScreenHandler::UpdateNewScreen(DGUSLCD_Screens newscreen, bool save_current_screen) {
-  SERIAL_ECHOLNPAIR("SetNewScreen: ", newscreen);
+  DEBUG_ECHOLNPAIR("SetNewScreen: ", newscreen);
 
   if (save_current_screen && current_screen != DGUSLCD_SCREEN_POPUP && current_screen != DGUSLCD_SCREEN_CONFIRM) {
-    SERIAL_ECHOLNPAIR("SetNewScreen (saving): ", newscreen);
+    DEBUG_ECHOLNPAIR("SetNewScreen (saving): ", newscreen);
     memmove(&past_screens[1], &past_screens[0], sizeof(past_screens) - 1);
     past_screens[0] = current_screen;
   }
@@ -1309,13 +1318,35 @@ bool DGUSScreenHandler::loop() {
 
     if (!booted && ELAPSED(ms, BOOTSCREEN_TIMEOUT)) {
       booted = true;
-      
+
       // Ensure to pick up the settings
       SetTouchScreenConfiguration();
 
-      // Set initial leveling icon
-      dgusdisplay.WriteVariable(VP_MESH_LEVEL_STATUS, static_cast<uint16_t>(DGUS_GRID_VISUALIZATION_START_ID));
-      
+      #if HAS_MESH
+        if (ExtUI::getMeshValid())
+        {
+          uint8_t abl_probe_index = 0;
+            for(uint8_t outer = 0; outer < GRID_MAX_POINTS_Y; outer++)
+            {
+              for (uint8_t inner = 0; inner < GRID_MAX_POINTS_X; inner++)
+              {
+                uint8_t x_Point = inner;
+                bool zig = (outer & 1);
+                if (zig) x_Point = (GRID_MAX_POINTS_X - 1) - inner;
+                xy_uint8_t point = {x_Point, outer};
+
+                DEBUG_ECHOLNPAIR("Mesh X: ", x_Point);
+                DEBUG_ECHOLNPAIR("Mesh Y: ", outer);
+                DEBUG_ECHOLNPAIR("Mesh adr: ", (VP_MESH_VALUE_START + (abl_probe_index * 4)));
+                DEBUG_ECHOLNPAIR("Mesh Val: ", ExtUI::getMeshPoint(point));
+                ScreenHandler.DGUSLCD_SendFloatAsLongValueToDisplay<3>((VP_MESH_VALUE_START + (abl_probe_index * 4)), ExtUI::getMeshPoint(point));
+                ++abl_probe_index;
+              }
+            }
+
+          ExtUI::setLevelingActive(true);
+        }
+      #endif
       GotoScreen(DGUSLCD_SCREEN_MAIN);
     }
   }

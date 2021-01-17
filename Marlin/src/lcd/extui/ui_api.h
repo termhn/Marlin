@@ -155,9 +155,6 @@ namespace ExtUI {
       void onMeshUpdate(const int8_t xpos, const int8_t ypos, const float zval);
       inline void onMeshUpdate(const xy_int8_t &pos, const float zval) { onMeshUpdate(pos.x, pos.y, zval); }
 
-      void onMeshCallback(const int8_t xpos, const int8_t ypos, const float zval);
-      inline void onMeshCallback(const xy_int8_t &pos, const float zval) { onMeshCallback(pos.x, pos.y, zval); }
-
       typedef enum : unsigned char {
         MESH_START,    // Prior to start of probe
         MESH_FINISH,   // Following probe of all points
@@ -181,9 +178,6 @@ namespace ExtUI {
     char* getFilamentUsed_str(char buffer[21]);
   #endif
 
-  void onHomingStart();
-  void onHomingComplete();
-
   void setTargetTemp_celsius(const float, const heater_t);
   void setTargetTemp_celsius(const float, const extruder_t);
   void setTargetFan_percent(const float, const fan_t);
@@ -203,6 +197,7 @@ namespace ExtUI {
   void setTravelAcceleration_mm_s2(const float);
   void setFeedrate_percent(const float);
   void setFlow_percent(const int16_t, const extruder_t);
+  bool awaitingUserConfirm();
   void setUserConfirmed();
   bool isWaitingOnUser();
 
@@ -384,9 +379,6 @@ namespace ExtUI {
   #if HAS_PID_HEATING
     void onPidTuning(const result_t rst);
   #endif
-
-  void onSteppersDisabled();
-  void onSteppersEnabled();
 };
 
 /**

@@ -164,7 +164,7 @@ public:
 
   static void OnFactoryReset();
 
-#if HAS_BUZZER
+#if HAS_BUZZER || ENABLED(SPEAKER)
   static void Buzzer(const uint16_t frequency, const uint16_t duration);
 #endif
 
@@ -252,6 +252,12 @@ public:
     }
   }
 
+  template<unsigned int decimals>
+  static void DGUSLCD_SendFloatAsLongValueToDisplay(uint16_t vp, float var) {
+    var *= cpow(10, decimals);
+    dgusdisplay.WriteVariable(vp, (long)var);
+  }
+
   // Receive a float from the display - Display will send a 2-byte integer scaled to the number of digits
   template<unsigned int decimals>
   static void DGUSLCD_SetFloatAsIntFromDisplay(DGUS_VP_Variable &var, void *val_ptr) {
@@ -287,12 +293,20 @@ public:
   static void DGUSLCD_SendFloatAsIntValueToDisplay(DGUS_VP_Variable &var) {
     if (var.memadr) {
       float f = *(float *)var.memadr;
+      DEBUG_ECHOLNPAIR_F(" >> ", f, 6);
       f *= cpow(10, decimals);
 
       // Round - truncated values look like skipped numbers
       int16_t roundedValue = static_cast<int16_t>(round(f));
       dgusdisplay.WriteVariable(var.VP, roundedValue);
     }
+  }
+
+  template<unsigned int decimals>
+  static void DGUSLCD_SendFloatAsIntValueToDisplay(uint16_t vp, float var) {
+    DEBUG_ECHOLNPAIR_F(" >> ", var, 6);
+    var *= cpow(10, decimals);
+    dgusdisplay.WriteVariable(vp, (int16_t)var);
   }
 
   template<AxisEnum Axis>
@@ -313,6 +327,8 @@ public:
   static inline bool IsScreenComplete() { return ScreenComplete; }
 
   static inline DGUSLCD_Screens getCurrentScreen() { return current_screen; }
+
+  static void updateCurrentScreen(DGUSLCD_Screens current);
 
   static bool HandlePendingUserConfirmation();
 

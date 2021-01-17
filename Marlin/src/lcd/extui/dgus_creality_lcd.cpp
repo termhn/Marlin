@@ -198,8 +198,15 @@ bool hasPrintTimer = false;
     }
 
     void onMeshUpdate(const int8_t xpos, const int8_t ypos, const ExtUI::probe_state_t state) {
+      // Only called for UBL
+      if (state == MESH_START) {
+        ScreenHandler.OnMeshLevelingStart();
+      }
+
       ScreenHandler.OnMeshLevelingUpdate(xpos, ypos);
     }
+
+
   #endif
 
   #if ENABLED(POWER_LOSS_RECOVERY)
