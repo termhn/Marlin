@@ -12,7 +12,7 @@
 //#define MachineCR20Pro
 //#define MachineCR10S
 //#define MachineCR10SV2
-//#define MachineCR10SPro // Graphics LCD Requires soldering R64 and R66
+#define MachineCR10SPro // Graphics LCD Requires soldering R64 and R66
 //#define MachineCR10SProV2 // Second Gen 10S Pro with BLTouch wired to Z Max
 //#define MachineCRX
 //#define MachineCRXPro
@@ -50,7 +50,7 @@
    E3D Mounting assumes Groovemount
    Creality Mounting assumes bolt-on kit
 */
-//#define HotendStock
+#define HotendStock
 //#define HotendE3D
 //#define HotendMosquito
 
@@ -81,16 +81,16 @@
    ac bed, leave both disabled
 */
 //#define BedAC
-//#define BedDC
+#define BedDC
 
-//#define SolidBedMounts //Removed a few LCD options to save some memory since not needed with solid mounts
+#define SolidBedMounts //Removed a few LCD options to save some memory since not needed with solid mounts
 
 /*
    Choose ABL sensor type below
    Leave all disabled if no sensor is available
 */
 //#define ABL_EZABL // TH3D EZABL or Any NO Sensor
-//#define ABL_NCSW //Creality ABL or Any NC Sensor
+#define ABL_NCSW //Creality ABL or Any NC Sensor
 //#define ABL_BLTOUCH
 //#define ABL_TOUCH_MI // Uncomment ABL_TOUCH_MI to use Touch-MI sensor by hotends.fr
 
@@ -133,7 +133,7 @@
    If a probe is enabled and nothing selected here, defaults to Bilinear
 */
 //#define ABL_BI
-//#define ABL_UBL
+#define ABL_UBL
 
 /*
    For melzi boards these options allow you to cusomize what you want to do.
@@ -195,7 +195,7 @@
 //#define MeshFast
 //#define MeshStd
 //#define MeshFine
-//#define MeshExtreme
+#define MeshExtreme
 
 /*
    Disables SD Sort, Autotemp, Arc support, Linear Advance (Unless overridden with OrigLA above), Big edit fonts, and a few other little things
@@ -1706,6 +1706,10 @@
  *
  * Specify a Probe position as { X, Y, Z }
  */
+
+#define NOZZLE_TO_PROBE_OFFSET { -48, -2, 0 }
+
+/*
 #if ENABLED(MachineCRXPro, HotendStock, ABL_BLTOUCH)
   #define NOZZLE_TO_PROBE_OFFSET { 48, 3, 0 }
 #elif ENABLED(MachineCRX, HotendStock)
@@ -1745,7 +1749,7 @@
     #define NOZZLE_TO_PROBE_OFFSET { 32, 5, 0 }
   #endif
 #endif
-
+*/
 
 // Most probes should stay away from the edges of the bed, but
 // with NOZZLE_AS_PROBE this can be negative for a wider probing area.
@@ -2352,11 +2356,11 @@
   #define LEVEL_BED_CORNERS
 #endif
 #if ENABLED(LEVEL_BED_CORNERS)
+#endif
   #define LEVEL_CORNERS_INSET_LFRB { 22, 22, 22, 22 } // (mm) Left, Front, Right, Back insets
   #define LEVEL_CORNERS_HEIGHT      0.0   // (mm) Z height of nozzle at leveling points
   #define LEVEL_CORNERS_Z_HOP       4.0   // (mm) Z height of nozzle between leveling points
   #define LEVEL_CENTER_TOO              // Move to the center after the last corner
-#endif
 
 /**
  * Commands to execute at the end of G29 probing.
@@ -2773,12 +2777,12 @@
  * you must uncomment the following option or it won't work.
  *
  */
-#if DISABLED(MelziHostOnly)
-  #define SDSUPPORT
-#endif
-#if ENABLED(MachineEnder3V2)
-  #define SDIO_SUPPORT
-#endif
+// #if DISABLED(MelziHostOnly)
+//   #define SDSUPPORT
+// #endif
+// #if ENABLED(MachineEnder3V2)
+//   #define SDIO_SUPPORT
+// #endif
 
 /**
  * SD CARD: SPI SPEED
